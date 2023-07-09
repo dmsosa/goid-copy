@@ -16,6 +16,12 @@ Dies ist ein Kopie, die Python Programms um nach Schlusselworten in Google Bilde
 
 Dieses Kopie in Python 3.11.0 geschreiben ist und kann auf jeder Version von Python 3.X ausgefuhrt weden. Es handelt sich um ein Download-and-Run-Programm mit einigen Anderungen je nachdem, auf welchem Gerat Sie die App verwenden.
 
+
+Dieses Kopie in Python 3.11.0 geschreiben ist und kann auf jeder Version von Python 3.X ausgefuhrt weden. Es handelt sich um ein Download-and-Run-Programm mit einigen Anderungen je nachdem, auf welchem Gerat Sie die App verwenden.
+Dieses Kopie in Python 3.11.0 geschreiben ist und kann auf jeder Version von Python 3.X ausgefuhrt weden. Es handelt sich um ein Download-and-Run-Programm mit einigen Anderungen je nachdem, auf welchem Gerat Sie die App verwenden.
+
+
+
 ##Status
 
 Dies ist ein kleines Kopie, das Fertig-zu-benutz ist, sich aber noch unter Entwicklung befindet. Viele weitere Funktionen in Kurze hinzugefugt werden.
