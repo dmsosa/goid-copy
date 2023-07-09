@@ -31,5 +31,13 @@ Dies ist ein kleines Kopie, das Fertig-zu-benutz ist, sich aber noch unter Entwi
 Mit diesem Programm konnen Sie Tonnen von Bildern von Google herunterladen. Bitte, verstehe es, dass ich nicht alle diese riesige Absatz ubersetz wird.
 
 
+## Verwendung
+'search_keyword = ['Taj Mahal', 'Pyramide von Gizeh']'
 
+Diese Liste wird verwendet, um nach Schlüsselwörtern zu suchen. Sie können diese Liste bearbeiten, um nach Google-Bildern Ihrer Wahl zu suchen. Sie können einfach Elemente der Liste hinzufügen und entfernen.
 
+'keywords = ['','%20high%20resolution','%20paintings','%20at%20night','%20from%20top']'
+
+Diese Liste wird verwendet, um Ihrem Suchbegriff ein Sufix hinzuzufügen. Jedes Element der Liste hilft Ihnen, 100 Bilder herunterzuladen. Das erste Element ist leer, was bedeutet, dass dem Suchbegriff der obigen Liste kein Sufix hinzugefügt wird.
+
+Sie können die Liste bearbeiten, indem Sie Elemente hinzufügen/löschen. '%20' bezeichnet ein Leerzeichen.

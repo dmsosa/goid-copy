@@ -2,23 +2,27 @@
 
 #die notwendig Modulen zu importieren
 
-from urllib import request, response, error, parse #Urllib fur die Request machen
+from urllib import request, response, error, parse #Urllib Library fur die Request machen
 import time #Wie mochten es wissen, wie lang unsere Programm zu beenden annehmen
+import sys #Sys Library zu importieren
 
 search_keyword = ['bola', 'aufmerksamkeit']
-keywords = ['', '%20high%20quality', '%20in%20real%20life', '%20how%20to%draw']
+keywords = ['', ' high quality', ' in real life', ' how to draw']
 
 def download_page(url):
-        try:
-            headers = {
-                'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
-            }
-            req = request.Request(url, headers=headers)
-            resp = request.urlopen(req)
-            rawPage = str(resp.read())
-            return rawPage
-        except Exception as err:
-            print(err)
+        version = (3,0)
+        current_version = sys.version_info
+        if current_version >= version:
+            try:
+                headers = {
+                    'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
+                }
+                req = request.Request(url, headers=headers)
+                resp = request.urlopen(req)
+                rawPage = str(resp.read())
+                return rawPage
+            except Exception as err:
+                print(err)
 def _images_get_next_item(s):
     start_line = s.find('rg_di')
     if start_line == -1:
@@ -60,6 +64,7 @@ while i < len(search_keyword):
     while j < len(keywords):
         root = 'https://www.google.com/search?q='
         base = '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
+        coded_keyword = keywords[j].replace(' ', '%20')
         url = root + search + keywords[j] + '' + base
         page = download_page(url)
         items = items + _images_get_all_images(page)
