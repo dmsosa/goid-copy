@@ -24,73 +24,75 @@ def download_page(url):
             except Exception as err:
                 print(err)
 def _images_get_next_item(s):
-    start_line = s.find('rg_di')
+    start_line = s.find('<img data-src=')
+    # print(s)
+    # time.sleep(10)
     if start_line == -1:
         end_quote = 0
         link = "no links"
         return link, end_quote
     else:
-        start_line = s.find('"class="rg_di"')
-        start_content = s.find('imgurl=',start_line+1)
-        end_content = s.find('&amp;',start_content+1)
-        content_raw = str(s[start_content+7:end_content])
+        # start_line = s.find('<img data-src=')
+        # start_content = s.find('imgurl=',start_line+1)
+        end_content = s.find('" data-ils',start_line+15)
+        content_raw = str(s[start_line+15:end_content])
         return content_raw, end_content
 def _images_get_all_images(page):
     items = []
     while True:
         item, end_content = _images_get_next_item(page)
         if item == 'no links':
-             break
+            print('no more links')
+            break
         else:
             items.append(item)
         #Alle die Items in dem List "Links" bekannt zu hinzufugen
-            time.sleep(1)
         #Timer konnte verwendet werden, um den Anfrage fur das Herunterladen von Bildern zu verlangsamen
             page = page[end_content:]
-        return items
+    return items
 
 #Die tatsache programm
 
 t0 = time.time()
-
 i = 0
+root = 'https://www.google.com/search?q='
+base = '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
 while i < len(search_keyword):
     items = list()
     iteration = "Item no.: " + str(i+1) + " -->" + " Item name = " + str(search_keyword[i])
     print (iteration)
+    with open('./links.txt', 'a', encoding='utf-8') as info:
+        info.write(str(i+1)+": "+str(search_keyword[i])+"\n")
     search_keywords = search_keyword[i]
     search = search_keywords.replace(' ', '%20')
     j = 0 
     while j < len(keywords):
-        root = 'https://www.google.com/search?q='
-        base = '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
         coded_keyword = keywords[j].replace(' ', '%20')
-        url = root + search + keywords[j] + '' + base
+        url = root + search + coded_keyword + base
         page = download_page(url)
+        print(coded_keyword)
         items = items + _images_get_all_images(page)
         j += 1
-        print ("Image Links = "+str(items))
-        print ("Total Image Links = "+str(len(items)))
-        print ("\n")
-        i = i+1
 
-        #Mit die nachsten Codezeilen konnen Sie alle Links in am neues .txt Datei schreiben, denn wird an die selber verzeichnis wie Ihr Code erstellt. Sie konnen die folgende 3 Zeilen auskommentieren, um keine Datei zu schreiben 
 
-        #Links.txt zu erstellen
-        info = open('./links.txt', 'a', encoding='utf-8')
-        #Dem Datei schreiben
-        info.write(str(i)+": "
-                   +str(search_keyword[i-1])+": \n"+
-                   str(items)+"\n\n\n")
-        #Dem Datei zu schliessen
-        info.close()
-        
-        t1 = time.time() 
+    print ("Image Links = "+str(items))
+    print ("Total Image Links = "+str(len(items)))
+    print ("\n")
+    #Mit die nachsten Codezeilen konnen Sie alle Links in am neues .txt Datei schreiben, denn wird an die selber verzeichnis wie Ihr Code erstellt. Sie konnen die folgende 3 Zeilen auskommentieren, um keine Datei zu schreiben 
 
-        total_time = t1 - t0 # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
+    #Links.txt zu erstellen
+    
+    #Dem Datei schreiben
+    with open('./links.txt', 'a', encoding='utf-8') as info:
+        info.write(str(items)+"\n\n\n")
+    #Dem Datei zu schliessen
+    i += 1
+    t1 = time.time() 
 
-        print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden")
+    total_time = t1 - t0 # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
 
+    print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden")
+info.close()
 # /////////////////  Ende des Programm  /////////////////
 
 
