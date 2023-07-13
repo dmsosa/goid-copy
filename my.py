@@ -28,8 +28,7 @@ def download_page(url):
                 print(err)
 def _images_get_next_item(s):
     start_line = s.find('<img data-src=')
-    # print(s)
-    # time.sleep(10)
+    time.sleep(0.5)
     if start_line == -1:
         end_quote = 0
         link = "no links"
@@ -60,6 +59,10 @@ t0 = time.time()
 i = 0
 root = 'https://www.google.com/search?q='
 base = '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
+linear = input('Mochtest Du nur Zeichnungsbildern suchen?')
+if linear.lower() == 'yes':
+    base = base + '&tbs=ic:gray,itp:lineart'
+
 while i < len(search_keyword):
     items = list()
     iteration = "Item no.: " + str(i+1) + " -->" + " Item name = " + str(search_keyword[i])
@@ -68,6 +71,14 @@ while i < len(search_keyword):
     #     info.write(str(i+1)+": "+str(search_keyword[i])+"\n")
     search_keywords = search_keyword[i]
     search = search_keywords.replace(' ', '%20')
+
+    try:
+        os.makedirs(search_keywords)
+    except OSError as e:
+        if e.errno != 17:
+            raise
+    pass
+
     j = 0 
     while j < len(keywords):
         coded_keyword = keywords[j].replace(' ', '%20')
@@ -101,13 +112,15 @@ while i < len(search_keyword):
 k = 0
 errors = 0
 directory = 'downloads'
+
+
 while k < len(items):
     from urllib.error import HTTPError, URLError
     try:
         req = request.Request(items[k], headers=headers)
         response = request.urlopen(req)
         data = response.read()
-        saver = open("../dataset/"+str(k+1)+".jpg", "wb")
+        saver = open(search_keywords+str(k+1)+".jpg", "wb")
         saver.write(data)
         saver.close()
         print("Bild "+str(k+1)+" gespeichert")
@@ -120,12 +133,12 @@ while k < len(items):
         print('URL Error in Bild: '+str(k+1))
         errors += 1
         k += 1
-    except IOError:
-        print('IO Error in Bild: '+str(k+1))
-        errors += 1
-        k += 1
+    # except IOError:
+    #     print('IO Error in Bild: '+str(k+1))
+    #     errors += 1
+    #     k += 1
 print("\nAlle "+str(k+1)+" Bildern gespeichert, Bruder!\nFehleranzahl ===> "+str(errors))
 
-# /////////////////  Ende des Programm  /////////////////
+#     /////////////////  Ende des Programm  /////////////////
 
 
