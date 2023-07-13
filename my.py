@@ -120,6 +120,10 @@ while k < len(items):
         print('URL Error in Bild: '+str(k+1))
         errors += 1
         k += 1
+    except IOError:
+        print('IO Error in Bild: '+str(k+1))
+        errors += 1
+        k += 1
 print("\nAlle "+str(k+1)+" Bildern gespeichert, Bruder!\nFehleranzahl ===> "+str(errors))
 
 # /////////////////  Ende des Programm  /////////////////
