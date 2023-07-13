@@ -107,7 +107,7 @@ while k < len(items):
         req = request.Request(items[k], headers=headers)
         response = request.urlopen(req)
         data = response.read()
-        saver = open(str(k+1)+".jpg", "wb")
+        saver = open("../dataset/"+str(k+1)+".jpg", "wb")
         saver.write(data)
         saver.close()
         print("Bild "+str(k+1)+" gespeichert")
