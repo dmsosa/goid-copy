@@ -2,12 +2,15 @@
 
 #die notwendig Modulen zu importieren
 
-from urllib import request, response, error, parse #Urllib Library fur die Request machen
+from urllib import request #Urllib Library fur die Request machen
 import time #Wie mochten es wissen, wie lang unsere Programm zu beenden annehmen
-import sys #Sys Library zu importieren
+import sys, os #Sys und os Library zu importieren
 
 search_keyword = ['bola', 'aufmerksamkeit']
 keywords = ['', ' high quality', ' in real life', ' how to draw']
+headers = {
+    'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
+                }
 
 def download_page(url):
         version = (3,0)
@@ -61,8 +64,8 @@ while i < len(search_keyword):
     items = list()
     iteration = "Item no.: " + str(i+1) + " -->" + " Item name = " + str(search_keyword[i])
     print (iteration)
-    with open('./links.txt', 'a', encoding='utf-8') as info:
-        info.write(str(i+1)+": "+str(search_keyword[i])+"\n")
+    # with open('./links.txt', 'a', encoding='utf-8') as info:
+    #     info.write(str(i+1)+": "+str(search_keyword[i])+"\n")
     search_keywords = search_keyword[i]
     search = search_keywords.replace(' ', '%20')
     j = 0 
@@ -83,16 +86,42 @@ while i < len(search_keyword):
     #Links.txt zu erstellen
     
     #Dem Datei schreiben
-    with open('./links.txt', 'a', encoding='utf-8') as info:
-        info.write(str(items)+"\n\n\n")
-    #Dem Datei zu schliessen
+    # with open('./links.txt', 'a', encoding='utf-8') as info:
+    #     info.write(str(items)+"\n\n\n")
+    # #Dem Datei zu schliessen
     i += 1
+
     t1 = time.time() 
 
     total_time = t1 - t0 # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
 
     print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden")
-info.close()
+
+#Bildern speichern
+k = 0
+errors = 0
+directory = 'downloads'
+while k < len(items):
+    from urllib.error import HTTPError, URLError
+    try:
+        req = request.Request(items[k], headers=headers)
+        response = request.urlopen(req)
+        data = response.read()
+        saver = open(str(k+1)+".jpg", "wb")
+        saver.write(data)
+        saver.close()
+        print("Bild "+str(k+1)+" gespeichert")
+        k += 1
+    except HTTPError:
+        print('HTTP Error in Bild: '+str(k+1))
+        errors += 1
+        k += 1
+    except URLError:
+        print('URL Error in Bild: '+str(k+1))
+        errors += 1
+        k += 1
+print("\nAlle "+str(k+1)+" Bildern gespeichert, Bruder!\nFehleranzahl ===> "+str(errors))
+
 # /////////////////  Ende des Programm  /////////////////
 
 
