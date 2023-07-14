@@ -5,8 +5,27 @@
 import time #Wie mochten es wissen, wie lang unsere Programm zu beenden annehmen
 import sys, os #Sys und os Library zu importieren
 import ssl
+from urllib import request
+import argparse
 
-search_keyword = ['bola', 'aufmerksamkeit']
+parser = argparse.ArgumentParser()
+parser.add_argument('-k', '--keywords', help='Delimited keywords for searching images', required=True)
+parser.add_argument('-l', '--limit', help='Delimited list input', required=False)
+parser.add_argument('-d', '--draw', help='Filtering by draw', required=False, choices=[True, False])
+parser.add_argument('-c', '--color', help='Filtering by color', required=False, choices=[
+    'red','yellow','blue','orange','violet','green','brown','white','black','gray','pink','teal','purple'
+])
+
+args = parser.parse_args()
+
+search_keyword = [str(i) for i in args.keywords.split(',')]
+
+if args.limit:
+    limit = int(args.limit)
+    if int(args.limit) >= 100:
+        limit = 100
+else:
+    limit = 100
 keywords = ['', ' high quality', ' in real life', ' how to draw']
 headers = {
     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
@@ -16,7 +35,7 @@ def download_page(url):
         version = (3,0)
         current_version = sys.version_info
         if current_version >= version:
-            import urllib.request
+            
             try:
                 headers = {
                     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
@@ -35,7 +54,6 @@ def download_page(url):
                 print(err)
 def _images_get_next_item(s):
     start_line = s.find('<img data-src=')
-    time.sleep(0.05)
     if start_line == -1:
         end_quote = 0
         link = "no links"
@@ -64,11 +82,12 @@ def _images_get_all_images(page):
 
 t0 = time.time()
 i = 0
+
 root = 'https://www.google.com/search?q='
 base = '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
-linear = input('Mochtest Du nur Zeichnungsbildern suchen?')
-if linear.lower() == 'yes':
-    base = base + '&tbs=ic:gray,itp:lineart'
+color_param = ('&tbs=ic:specific,isc:'+str(args.color) if args.color else '')
+draw_param = ('&tbs=ic:gray,itp:lineart' if args.draw else '')
+
 
 while i < len(search_keyword):
     items = list()
@@ -78,9 +97,10 @@ while i < len(search_keyword):
     #     info.write(str(i+1)+": "+str(search_keyword[i])+"\n")
     search_keywords = search_keyword[i]
     search = search_keywords.replace(' ', '%20')
+    dir_name = search_keywords + (" - " + str(args.color) if args.color else '')
 
     try:
-        os.makedirs(search_keywords)
+        os.makedirs(dir_name)
     except OSError as e:
         if e.errno != 17:
             raise
@@ -89,8 +109,9 @@ while i < len(search_keyword):
     j = 0 
     while j < len(keywords):
         coded_keyword = keywords[j].replace(' ', '%20')
-        url = root + search + coded_keyword + base
+        url = root + search + coded_keyword + base + color_param + draw_param
         page = download_page(url)
+        time.sleep(0.05)
         print(coded_keyword)
         items = items + _images_get_all_images(page)
         j += 1
@@ -127,7 +148,7 @@ while i < len(search_keyword):
             req = request.Request(items[k], headers=headers)
             response = request.urlopen(req, timeout=10)
             data = response.read()
-            saver = open(os.path.join(search_keywords,str(k+1)+".jpg"), "wb")
+            saver = open(os.path.join(dir_name,str(k+1)+".jpg"), "wb")
             saver.write(data)
             saver.close()
             print("Bild "+str(k+1)+" gespeichert")
