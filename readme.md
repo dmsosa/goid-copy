@@ -1,4 +1,4 @@
-# qGoogle Images Downloader
+# Google Images Downloader
 
 Allereste Readme.MD fur dieses Repo.
 
@@ -43,4 +43,4 @@ Diese Liste wird verwendet, um nach Schlüsselwörtern zu suchen. Sie können di
 
 Diese Liste wird verwendet, um Ihrem Suchbegriff ein Sufix hinzuzufügen. Jedes Element der Liste hilft Ihnen, 100 Bilder herunterzuladen. Das erste Element ist leer, was bedeutet, dass dem Suchbegriff der obigen Liste kein Sufix hinzugefügt wird.
 
-Sie können die Liste bearbeiten, indem Sie Elemente hinzufügen/löschen. '%20' bezeichnet ein Leerzeichen.
+Sie können die Liste bearbeiten mit weniger Anderungen, indem Sie Elemente hinzufügen/löschen. '%20' bezeichnet ein Leerzeichen.
