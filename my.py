@@ -2,9 +2,9 @@
 
 #die notwendig Modulen zu importieren
 
-from urllib import request #Urllib Library fur die Request machen
 import time #Wie mochten es wissen, wie lang unsere Programm zu beenden annehmen
 import sys, os #Sys und os Library zu importieren
+import ssl
 
 search_keyword = ['bola', 'aufmerksamkeit']
 keywords = ['', ' high quality', ' in real life', ' how to draw']
@@ -16,19 +16,26 @@ def download_page(url):
         version = (3,0)
         current_version = sys.version_info
         if current_version >= version:
+            import urllib.request
             try:
                 headers = {
                     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
                 }
                 req = request.Request(url, headers=headers)
-                resp = request.urlopen(req)
+
+                try:
+                    resp = request.urlopen(req,data=None, timeout=10)
+                except:
+                    ctx = ssl._create_unverified_context()
+                    resp = request.urlopen(req,data=None, timeout=10, context=ctx)
+
                 rawPage = str(resp.read())
                 return rawPage
             except Exception as err:
                 print(err)
 def _images_get_next_item(s):
     start_line = s.find('<img data-src=')
-    time.sleep(0.5)
+    time.sleep(0.05)
     if start_line == -1:
         end_quote = 0
         link = "no links"
@@ -109,35 +116,35 @@ while i < len(search_keyword):
     print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden")
 
 #Bildern speichern
-k = 0
-errors = 0
-directory = 'downloads'
+    k = 0
+    errors = 0
+    directory = 'downloads'
 
 
-while k < len(items):
-    from urllib.error import HTTPError, URLError
-    try:
-        req = request.Request(items[k], headers=headers)
-        response = request.urlopen(req)
-        data = response.read()
-        saver = open(search_keywords+str(k+1)+".jpg", "wb")
-        saver.write(data)
-        saver.close()
-        print("Bild "+str(k+1)+" gespeichert")
-        k += 1
-    except HTTPError:
-        print('HTTP Error in Bild: '+str(k+1))
-        errors += 1
-        k += 1
-    except URLError:
-        print('URL Error in Bild: '+str(k+1))
-        errors += 1
-        k += 1
-    # except IOError:
-    #     print('IO Error in Bild: '+str(k+1))
-    #     errors += 1
-    #     k += 1
-print("\nAlle "+str(k+1)+" Bildern gespeichert, Bruder!\nFehleranzahl ===> "+str(errors))
+    while k < len(items):
+        from urllib.error import HTTPError, URLError
+        try:
+            req = request.Request(items[k], headers=headers)
+            response = request.urlopen(req, timeout=10)
+            data = response.read()
+            saver = open(os.path.join(search_keywords,str(k+1)+".jpg"), "wb")
+            saver.write(data)
+            saver.close()
+            print("Bild "+str(k+1)+" gespeichert")
+            k += 1
+        except HTTPError:
+            print('HTTP Error in Bild: '+str(k+1))
+            errors += 1
+            k += 1
+        except URLError:
+            print('URL Error in Bild: '+str(k+1))
+            errors += 1
+            k += 1
+        # except IOError:
+        #     print('IO Error in Bild: '+str(k+1))
+        #     errors += 1
+        #     k += 1
+    print("\nAlle "+str(k+1)+" Bildern gespeichert fur "+search_keywords+", Bruder!\nFehleranzahl ===> "+str(errors))
 
 #     /////////////////  Ende des Programm  /////////////////
 
