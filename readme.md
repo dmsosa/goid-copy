@@ -35,12 +35,30 @@ Mit diesem Programm konnen Sie Tonnen von Bildern von Google herunterladen. Bitt
 Wenn Sie SSL-Fehler auf dem Mac für Python 3 sehen, gehen Sie bitte zum Finder —> Anwendungen —> Python 3 —> Klicken Sie auf den Befehl "Zertifikate installieren" und führen Sie die Datei aus.
 
 ## Verwendung
-'search_keyword = ['Taj Mahal', 'Pyramide von Gizeh']'
 
-Diese Liste wird verwendet, um nach Schlüsselwörtern zu suchen. Sie können diese Liste bearbeiten, um nach Google-Bildern Ihrer Wahl zu suchen. Sie können einfach Elemente der Liste hinzufügen und entfernen.
+### Wenn Sie die Python 2.x-Version installiert haben 
+'python google-images-download.py -keywords "Eisbären, Ballons, Strände" -limit 20' 
 
-'keywords = ['','%20high%20resolution','%20paintings','%20at%20night','%20from%20top']'
+### Wenn Sie die Python 3.x-Version installiert haben 
+'python3 google-images-download.py -Schlüsselwörter "Eisbären, Ballons, Strände" -limit 20' 
 
-Diese Liste wird verwendet, um Ihrem Suchbegriff ein Sufix hinzuzufügen. Jedes Element der Liste hilft Ihnen, 100 Bilder herunterzuladen. Das erste Element ist leer, was bedeutet, dass dem Suchbegriff der obigen Liste kein Sufix hinzugefügt wird.
+### So verwenden Sie den Kurzhandbefehl 
 
-Sie können die Liste bearbeiten mit weniger Anderungen, indem Sie Elemente hinzufügen/löschen. '%20' bezeichnet ein Leerzeichen.
+
+'python google-images-download.py -k "Eisbären, Ballons, Strände" -l 20' 
+
+### So verwenden Sie Farbfilter für die Bilder
+
+'python google-images-download.py -k "Spielplatz" -l 20 -c rot'
+
+### So verwenden Sie Zeichnunfilter fur die Bilder
+
+'py my.py -k "Gemuse" -l 10 -c blau -d True
+
+
+
+===> Arguments explained:
+ **Schlüsselwörter** bezeichnet die Wörter, nach denen Sie suchen möchten, 
+**limit** gibt die Anzahl der Bilder an, die Sie herunterladen möchten
+**Farbe** bezeichnet den Farbfilter, den Sie auf die Bilder anwenden möchten. Nur das Feld für Schlüsselwörter ist obligatorisch.
+**Zeichnung** bezeichnet den Zeichnungfilter, den Sie auf die Bilder anwenden mochten, wenn Sie diese Feld aktiviert werden, die Programm wird dich nur Zeichbilder geben

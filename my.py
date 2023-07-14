@@ -11,7 +11,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--keywords', help='Delimited keywords for searching images', required=True)
 parser.add_argument('-l', '--limit', help='Delimited list input', required=False)
-parser.add_argument('-d', '--draw', help='Filtering by draw', required=False, choices=[True, False])
+parser.add_argument('-d', '--draw', help='Filtering by draw', required=False, const=True, action='store_const')
 parser.add_argument('-c', '--color', help='Filtering by color', required=False, choices=[
     'red','yellow','blue','orange','violet','green','brown','white','black','gray','pink','teal','purple'
 ])
