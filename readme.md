@@ -57,8 +57,9 @@ Wenn Sie SSL-Fehler auf dem Mac für Python 3 sehen, gehen Sie bitte zum Finder 
 
 
 
-===> Arguments explained:
- **Schlüsselwörter** bezeichnet die Wörter, nach denen Sie suchen möchten, 
-**limit** gibt die Anzahl der Bilder an, die Sie herunterladen möchten
-**Farbe** bezeichnet den Farbfilter, den Sie auf die Bilder anwenden möchten. Nur das Feld für Schlüsselwörter ist obligatorisch.
-**Zeichnung** bezeichnet den Zeichnungfilter, den Sie auf die Bilder anwenden mochten, wenn Sie diese Feld aktiviert werden, die Programm wird dich nur Zeichbilder geben
+===> Arguments | Shorthand | Beschreibung
+
+ **Schlüsselwörter** | k | bezeichnet die Wörter, nach denen Sie suchen möchten, 
+**limit** | l | gibt die Anzahl der Bilder an, die Sie herunterladen möchten
+**Farbe** | c | bezeichnet den Farbfilter, den Sie auf die Bilder anwenden möchten. Nur das Feld für Schlüsselwörter ist obligatorisch.
+**Zeichnung** | d | bezeichnet den Zeichnungfilter, den Sie auf die Bilder anwenden mochten, wenn Sie diese Feld aktiviert werden, die Programm wird dich nur Zeichbilder geben
