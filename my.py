@@ -15,6 +15,7 @@ parser.add_argument('-d', '--draw', help='Filtering by draw', required=False, co
 parser.add_argument('-c', '--color', help='Filtering by color', required=False, choices=[
     'red','yellow','blue','orange','violet','green','brown','white','black','gray','pink','teal','purple'
 ])
+parser.add_argument('-u', '--url', help='Ein einzelnes Bilder nach Benutzerurl herunterladen', required=False, type=str)
 
 args = parser.parse_args()
 
@@ -26,10 +27,13 @@ if args.limit:
         limit = 100
 else:
     limit = 100
+
+#Globalen Variablen initialisieren
 keywords = ['', ' high quality', ' in real life', ' how to draw']
 headers = {
     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
                 }
+ctx = ssl._create_unverified_context()
 
 def download_page(url):
         version = (3,0)
@@ -45,7 +49,6 @@ def download_page(url):
                 try:
                     resp = request.urlopen(req,data=None, timeout=10)
                 except:
-                    ctx = ssl._create_unverified_context()
                     resp = request.urlopen(req,data=None, timeout=10, context=ctx)
 
                 rawPage = str(resp.read())
@@ -80,93 +83,116 @@ def _images_get_all_images(page):
 
 #Die tatsache programm
 
-t0 = time.time()
-i = 0
-
-root = 'https://www.google.com/search?q='
-base = '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
-color_param = ('&tbs=ic:specific,isc:'+str(args.color) if args.color else '')
-draw_param = ('&tbs=ic:gray,itp:lineart' if args.draw else '')
-
-
-while i < len(search_keyword):
-    items = list()
-    iteration = "Item no.: " + str(i+1) + " -->" + " Item name = " + str(search_keyword[i])
-    print (iteration)
-    # with open('./links.txt', 'a', encoding='utf-8') as info:
-    #     info.write(str(i+1)+": "+str(search_keyword[i])+"\n")
-    search_keywords = search_keyword[i]
-    search = search_keywords.replace(' ', '%20')
-    dir_name = search_keywords + (" - " + str(args.color) if args.color else '')
-
+if args.url:
+    url = args.url;
     try:
-        os.makedirs(dir_name)
+        os.makedirs('downloads')
     except OSError as e:
         if e.errno != 17:
             raise
-    pass
+        pass
+    req = request.Request(url, headers=headers)
+    response = request.urlopen(req, data=None, timeout=10, context=ctx)
+    imgName = url[(url.rfind('/')+1):]
+    if '?' in imgName:
+        imgName = imgName[:(imgName.find('?'))]
+    if ('.jpg' in imgName) or ('.jpeg' in imgName) or ('.png' in imgName) or ('.svg' in imgName) or ('.tbn' in imgName):
+        imgOutput = imgName
+    else:
+        imgOutput = imgName + ".jpg"
+    with open('downloads/'+imgOutput, 'wb') as saver:
+        data = response.read()
+        saver.write(data)
+    print("Bilder erfolgreich gespeichert! =====> "+imgOutput)
 
-    j = 0 
-    while j < len(keywords):
-        coded_keyword = keywords[j].replace(' ', '%20')
-        url = root + search + coded_keyword + base + color_param + draw_param
-        page = download_page(url)
-        time.sleep(0.05)
-        print(coded_keyword)
-        items = items + _images_get_all_images(page)
-        j += 1
+else:
+    t0 = time.time()
+    i = 0
 
-
-    print ("Image Links = "+str(items))
-    print ("Total Image Links = "+str(len(items)))
-    print ("\n")
-    #Mit die nachsten Codezeilen konnen Sie alle Links in am neues .txt Datei schreiben, denn wird an die selber verzeichnis wie Ihr Code erstellt. Sie konnen die folgende 3 Zeilen auskommentieren, um keine Datei zu schreiben 
-
-    #Links.txt zu erstellen
-    
-    #Dem Datei schreiben
-    # with open('./links.txt', 'a', encoding='utf-8') as info:
-    #     info.write(str(items)+"\n\n\n")
-    # #Dem Datei zu schliessen
-    i += 1
-
-    t1 = time.time() 
-
-    total_time = t1 - t0 # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
-
-    print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden")
-
-#Bildern speichern
-    k = 0
-    errors = 0
-    directory = 'downloads'
+    root = 'https://www.google.com/search?q='
+    base = '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
+    color_param = ('&tbs=ic:specific,isc:'+str(args.color) if args.color else '')
+    draw_param = ('&tbs=ic:gray,itp:lineart' if args.draw else '')
 
 
-    while k < len(items):
-        from urllib.error import HTTPError, URLError
+    while i < len(search_keyword):
+        items = list()
+        iteration = "Item no.: " + str(i+1) + " -->" + " Item name = " + str(search_keyword[i])
+        print (iteration)
+        # with open('./links.txt', 'a', encoding='utf-8') as info:
+        #     info.write(str(i+1)+": "+str(search_keyword[i])+"\n")
+        search_keywords = search_keyword[i]
+        search = search_keywords.replace(' ', '%20')
+        dir_name = search_keywords + (" - " + str(args.color) if args.color else '')
+
         try:
-            req = request.Request(items[k], headers=headers)
-            response = request.urlopen(req, timeout=10)
-            data = response.read()
-            saver = open(os.path.join(dir_name,str(k+1)+".jpg"), "wb")
-            saver.write(data)
-            saver.close()
-            print("Bild "+str(k+1)+" gespeichert")
-            k += 1
-        except HTTPError:
-            print('HTTP Error in Bild: '+str(k+1))
-            errors += 1
-            k += 1
-        except URLError:
-            print('URL Error in Bild: '+str(k+1))
-            errors += 1
-            k += 1
-        # except IOError:
-        #     print('IO Error in Bild: '+str(k+1))
-        #     errors += 1
-        #     k += 1
-    print("\nAlle "+str(k+1)+" Bildern gespeichert fur "+search_keywords+", Bruder!\nFehleranzahl ===> "+str(errors))
+            os.makedirs(dir_name)
+        except OSError as e:
+            if e.errno != 17:
+                raise
+        pass
 
-#     /////////////////  Ende des Programm  /////////////////
+        j = 0 
+        while j < len(keywords):
+            coded_keyword = keywords[j].replace(' ', '%20')
+            url = root + search + coded_keyword + base + color_param + draw_param
+            page = download_page(url)
+            time.sleep(0.05)
+            print(coded_keyword)
+            items = items + _images_get_all_images(page)
+            j += 1
+
+
+        print ("Image Links = "+str(items))
+        print ("Total Image Links = "+str(len(items)))
+        print ("\n")
+        #Mit die nachsten Codezeilen konnen Sie alle Links in am neues .txt Datei schreiben, denn wird an die selber verzeichnis wie Ihr Code erstellt. Sie konnen die folgende 3 Zeilen auskommentieren, um keine Datei zu schreiben 
+
+        #Links.txt zu erstellen
+        
+        #Dem Datei schreiben
+        # with open('./links.txt', 'a', encoding='utf-8') as info:
+        #     info.write(str(items)+"\n\n\n")
+        # #Dem Datei zu schliessen
+        i += 1
+
+        t1 = time.time() 
+
+        total_time = t1 - t0 # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
+
+        print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden")
+
+    #Bildern speichern
+        k = 0
+        errors = 0
+        directory = 'downloads'
+
+
+        while k < len(items):
+            from urllib.error import HTTPError, URLError
+            try:
+                req = request.Request(items[k], headers=headers)
+                response = request.urlopen(req, timeout=10, context=ctx)
+                data = response.read()
+                saver = open(os.path.join(dir_name,str(k+1)+".jpg"), "wb")
+                saver.write(data)
+                saver.close()
+                print("Bild "+str(k+1)+" gespeichert")
+                k += 1
+            except HTTPError:
+                print('HTTP Error in Bild: '+str(k+1))
+                errors += 1
+                k += 1
+            except URLError:
+                print('URL Error in Bild: '+str(k+1))
+                errors += 1
+                k += 1
+            # except IOError:
+            #     print('IO Error in Bild: '+str(k+1))
+            #     errors += 1
+            #     k += 1
+        print("\nAlle "+str(k+1)+" Bildern gespeichert fur "+search_keywords+", Bruder!\nFehleranzahl ===> "+str(errors))
+
+    #     /////////////////  Ende des Programm  /////////////////
 
 

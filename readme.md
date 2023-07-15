@@ -1,4 +1,4 @@
-# Google Images Downloader
+# :sunrise: Google Images Downloader
 
 Allereste Readme.MD fur dieses Repo.
 
@@ -21,45 +21,63 @@ Dieses Kopie in Python 3.11.0 geschreiben ist und kann auf jeder Version von Pyt
 Dieses Kopie in Python 3.11.0 geschreiben ist und kann auf jeder Version von Python 3.X ausgefuhrt weden. Es handelt sich um ein Download-and-Run-Programm mit einigen Anderungen je nachdem, auf welchem Gerat Sie die App verwenden.
 
 
+--- 
 
-## Status
+## Wie kann mann dieses Script benutz?
 
-Dies ist ein kleines Kopie, das Fertig-zu-benutz ist, sich aber noch unter Entwicklung befindet. Viele weitere Funktionen in Kurze hinzugefugt werden.
+1. Dieses Repo an dein lokale Festplatte herunterladen
+2. Offnen Sie das Terminal (fur Mac/Linux Betriebssysteme) oder die Eingabeaufforderung (fur Windows-Betriebssysteme) und navigieren Sie zum Speicherort der Datei "google-images-download.py" auf Ihrer lokalen Festplatte.
+3. Geben Sie einen der folgenden Befehle ein
 
-## Haftungsausschluss
+## Verwerdung
 
-Mit diesem Programm konnen Sie Tonnen von Bildern von Google herunterladen. Bitte, verstehe es, dass ich nicht alle diese riesige Absatz ubersetz wird.
+`py my.py [Argumente...]`
+
+### Argumente
+| Argument | Abkurzung | Beschreibung |
+| --- | :---: | --- |
+| **keywords** | k | Gibt die Worter an, nach denen Sie suchen mochten |
+| **limit** | l | Bezeicht die Bildernnummer, die du erhalten mochtest |
+| **color** | c | Bezeicht die Farbe, an die die Bilderergebnisse erhalten mochte |
+| **url** | u | Ermoglicht dir, ein einzelnes Bilder nach dem gegeben URL herunterladen |
+
+**Anmerkung** Nur die Keywordsfeld is obligatorisch
+
+## Beispiele
+
+Wenn Sie python 2.X installieren hast
+
+`python google-images-download.py --keywords "Polar bears, baloons, Beaches" --limit 20`
+
+Wenn Sie python 3.X installieren hast
+
+`python3 google-images-download.py --keywords "Polar bears, baloons, Beaches" --limit 20`
+
+Um die Abkurzung zu benutz
+
+`python google-images-download.py -k "Polar bears, baloons, Beaches" -l 20`
+
+Um die Farbe oder Zeichnungfilter zu benutz
+
+`python google-images-download.py -k "playground" -l 20 -c red`
+
+===> Die Bildern in ihren eigenen Verzeichnissen im selben Ort wie die Pythondatei heruntergeladen werden
+
+---
 
 ## SSLFehler
 
 Wenn Sie SSL-Fehler auf dem Mac für Python 3 sehen, gehen Sie bitte zum Finder —> Anwendungen —> Python 3 —> Klicken Sie auf den Befehl "Zertifikate installieren" und führen Sie die Datei aus.
 
-## Verwendung
+## Beitragen oder Arbeiten Sie mit uns zusammen
 
-### Wenn Sie die Python 2.x-Version installiert haben 
-'python google-images-download.py -keywords "Eisbären, Ballons, Strände" -limit 20' 
+Jeder ist herzlich eingeladen, zu diesem Script beizutragen. Wenn Sie eine Anderung vornehmen mochten, offnen Sie einen Pullrequest. Fur Probleme und Diskussionen besuchen Sie den Issue Tracker *link*
 
-### Wenn Sie die Python 3.x-Version installiert haben 
-'python3 google-images-download.py -Schlüsselwörter "Eisbären, Ballons, Strände" -limit 20' 
+## :exclamation::exclamation: Disclaimer
 
-### So verwenden Sie den Kurzhandbefehl 
-
-
-'python google-images-download.py -k "Eisbären, Ballons, Strände" -l 20' 
-
-### So verwenden Sie Farbfilter für die Bilder
-
-'python google-images-download.py -k "Spielplatz" -l 20 -c rot'
-
-### So verwenden Sie Zeichnunfilter fur die Bilder
-
-'py my.py -k "Gemuse" -l 10 -c blau -d True
+Dieses Programm entmoglicht dich hundert, vielleicht tausend Bildern von Google zu herunterladen. Bitte bedank dich nicht dass ich alle diese grosse Absatz kopieren werde. Danke Sehr! 
 
 
 
-===> Arguments | Shorthand | Beschreibung
+/Duvi/
 
- **Schlüsselwörter** | k | bezeichnet die Wörter, nach denen Sie suchen möchten, 
-**limit** | l | gibt die Anzahl der Bilder an, die Sie herunterladen möchten
-**Farbe** | c | bezeichnet den Farbfilter, den Sie auf die Bilder anwenden möchten. Nur das Feld für Schlüsselwörter ist obligatorisch.
-**Zeichnung** | d | bezeichnet den Zeichnungfilter, den Sie auf die Bilder anwenden mochten, wenn Sie diese Feld aktiviert werden, die Programm wird dich nur Zeichbilder geben
