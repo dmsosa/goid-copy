@@ -1,1 +1,4 @@
 ./venv
+./downloads
+./links.txt
+./duplicate.py
