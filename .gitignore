@@ -1,4 +1,4 @@
-./venv
-./downloads
-./links.txt
-./duplicate.py
+venv
+downloads
+links.txt
+duplicate.py
