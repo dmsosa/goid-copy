@@ -1,4 +1,4 @@
-venv
-downloads
-links.txt
+/venv
+/downloads
+*.txt
 duplicate.py
