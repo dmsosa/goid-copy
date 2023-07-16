@@ -36,5 +36,17 @@ Mit diesem Programm konnen Sie Tonnen von Bildern von Google herunterladen. Bitt
 
 ## SSLFehler
 
-Wenn Sie SSL Fehler entdeckt, bitte kontaktieren Sie uns, um dir zu helfen. Die Rindfleisch wird verbrannt, Mann!
+Wenn Sie SSL-Fehler auf dem Mac für Python 3 sehen, gehen Sie bitte zum Finder —> Anwendungen —> Python 3 —> Klicken Sie auf den Befehl "Zertifikate installieren" und führen Sie die Datei aus.
+
+## Beitragen oder Arbeiten Sie mit uns zusammen
+
+Jeder ist herzlich eingeladen, zu diesem Script beizutragen. Wenn Sie eine Anderung vornehmen mochten, offnen Sie einen Pullrequest. Fur Probleme und Diskussionen besuchen Sie den Issue Tracker *link*
+
+## :exclamation: Disclaimer :exclamation:
+
+Dieses Programm entmoglicht dich hundert, vielleicht tausend Bildern von Google zu herunterladen. Bitte bedank dich nicht dass ich alle diese grosse Absatz kopieren werde. Danke Sehr! 
+
+
+
+/Duvi/
 
