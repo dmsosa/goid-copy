@@ -30,19 +30,59 @@ Dieses Kopie in Python 3.11.0 geschreiben ist und kann auf jeder Version von Pyt
 3. Geben Sie einen der folgenden Befehle ein
 
 ### Verwerdung
-## Haftungsausschluss
+---
+`py my.py [Argumente...]`
 
-Mit diesem Programm konnen Sie Tonnen von Bildern von Google herunterladen. Bitte, verstehe es, dass ich nicht alle diese riesige Absatz ubersetz wird.
+### Argumente
+| Argument | Abkurzung | Beschreibung |
+| --- | :---: | --- |
+| **keywords** | k | Gibt die Worter an, nach denen Sie suchen mochten |
+| **limit** | l | Bezeicht die Bildernnummer, die du erhalten mochtest |
+| **color** | c | Bezeicht die Farbe, an die die Bilderergebnisse erhalten mochte <br> Mogliche Werte: red, blue, yellow, green, orange, pink, violet, teal, black, white, gray |
+| **url** | u | Mit diese, kann man die spezielle URL von den Bildern herunterladen werden |
+| **single** | s | Ermoglicht dir, ein einzelnes Bilder nach dem gegeben URL herunterladen |
+| **pause** | p | Ermoglicht dir, ein Zeitspanne zu geben, um jeden herunter zu erwarten |
+| **output** | o | Auswahlen Sie die Ort, wo die Bildern speichern werden |
+| **type** | t | Entdecken Sie, welches Types die Bildern sind! |
+| **time** | z | Ermoglicht dir, ein Zeitspanne zu geben, um jeden herunter zu erwarten |
+| **rechte** | r | Erkennen Sie, wer die rechten von jeden Bildern habe! <br> Mogliche Ergegnisse:  labled-for-reuse-with-modifications, labled-for-reuse, labled-for-noncommercial-reuse-with-modification, labled-for-nocommercial-reuse |
+| **grosse** | g | Schaust Du, wie grosse die Bildern sind <br> Mogliche Ergegnisse:  small, medium, large, icon |
+
+**Anmerkung** Wenn es gibt kein `url` oder `single` Argument, nur die Keywordsfeld ist obligatorisch. Keine andere Argumente obligatorisch ist.
+
+## Beispiele
+
+Wenn Sie python 2.X installieren hast
+
+`python google-images-download.py --keywords "Polar bears, baloons, Beaches" --limit 20`
+
+Wenn Sie python 3.X installieren hast
+
+`python3 google-images-download.py --keywords "Polar bears, baloons, Beaches" --limit 20`
+
+Um die Abkurzung zu benutz
+
+`python google-images-download.py -k "Polar bears, baloons, Beaches" -l 20`
+
+Um die Farbe oder Zeichnungfilter zu benutz
+
+`python google-images-download.py -k "playground" -l 20 -c red`
+
+===> Die Bildern in ihren eigenen Verzeichnissen im selben Ort wie die Pythondatei heruntergeladen werden
+
+---
+>>>>>>> topic
 
 ## SSLFehler
 
 Wenn Sie SSL-Fehler auf dem Mac für Python 3 sehen, gehen Sie bitte zum Finder —> Anwendungen —> Python 3 —> Klicken Sie auf den Befehl "Zertifikate installieren" und führen Sie die Datei aus.
 
+
 ## Beitragen oder Arbeiten Sie mit uns zusammen
 
 Jeder ist herzlich eingeladen, zu diesem Script beizutragen. Wenn Sie eine Anderung vornehmen mochten, offnen Sie einen Pullrequest. Fur Probleme und Diskussionen besuchen Sie den Issue Tracker *link*
 
-## :exclamation: Disclaimer :exclamation:
+## :exclamation: Verzichtserklarung :exclamation:
 
 Dieses Programm entmoglicht dich hundert, vielleicht tausend Bildern von Google zu herunterladen. Bitte bedank dich nicht dass ich alle diese grosse Absatz kopieren werde. Danke Sehr! 
 
