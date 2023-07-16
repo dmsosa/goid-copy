@@ -1,4 +1,5 @@
 /venv
 /downloads
-*.txt
+links.txt
+history.txt
 duplicate.py
