@@ -12,15 +12,6 @@ from urllib.parse import quote
 search = "Taj mahal"
 
 
-s = [str(datetime.datetime.now()).split('.')[0]]
-i = 0
-while i < len(s):
-    print(len(s))
-    print(i)
-    search = s[i]
-    print(search)
-    i += 1
-
 # opt = Options()
 # opt.add_experimental_option('detach', True)
 # # opt.add_argument('--headless=new')
