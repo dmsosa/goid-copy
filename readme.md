@@ -38,10 +38,17 @@ Dieses Kopie in Python 3.11.0 geschreiben ist und kann auf jeder Version von Pyt
 | --- | :---: | --- |
 | **keywords** | k | Gibt die Worter an, nach denen Sie suchen mochten |
 | **limit** | l | Bezeicht die Bildernnummer, die du erhalten mochtest |
-| **color** | c | Bezeicht die Farbe, an die die Bilderergebnisse erhalten mochte |
-| **url** | u | Ermoglicht dir, ein einzelnes Bilder nach dem gegeben URL herunterladen |
+| **color** | c | Bezeicht die Farbe, an die die Bilderergebnisse erhalten mochte <br> Mogliche Werte: red, blue, yellow, green, orange, pink, violet, teal, black, white, gray |
+| **url** | u | Mit diese, kann man die spezielle URL von den Bildern herunterladen werden |
+| **single** | s | Ermoglicht dir, ein einzelnes Bilder nach dem gegeben URL herunterladen |
+| **pause** | p | Ermoglicht dir, ein Zeitspanne zu geben, um jeden herunter zu erwarten |
+| **output** | o | Auswahlen Sie die Ort, wo die Bildern speichern werden |
+| **type** | t | Entdecken Sie, welches Types die Bildern sind! |
+| **time** | z | Ermoglicht dir, ein Zeitspanne zu geben, um jeden herunter zu erwarten |
+| **rechte** | r | Erkennen Sie, wer die rechten von jeden Bildern habe! <br> Mogliche Ergegnisse:  labled-for-reuse-with-modifications, labled-for-reuse, labled-for-noncommercial-reuse-with-modification, labled-for-nocommercial-reuse |
+| **grosse** | g | Schaust Du, wie grosse die Bildern sind <br> Mogliche Ergegnisse:  small, medium, large, icon |
 
-**Anmerkung** Nur die Keywordsfeld is obligatorisch
+**Anmerkung** Wenn es gibt kein `url` oder `single` Argument, nur die Keywordsfeld ist obligatorisch. Keine andere Argumente obligatorisch ist.
 
 ## Beispiele
 
