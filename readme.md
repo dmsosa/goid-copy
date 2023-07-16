@@ -73,7 +73,7 @@ Wenn Sie SSL-Fehler auf dem Mac für Python 3 sehen, gehen Sie bitte zum Finder 
 
 Jeder ist herzlich eingeladen, zu diesem Script beizutragen. Wenn Sie eine Anderung vornehmen mochten, offnen Sie einen Pullrequest. Fur Probleme und Diskussionen besuchen Sie den Issue Tracker *link*
 
-## :exclamation::exclamation: Disclaimer
+## :exclamation: Disclaimer :exclamation:
 
 Dieses Programm entmoglicht dich hundert, vielleicht tausend Bildern von Google zu herunterladen. Bitte bedank dich nicht dass ich alle diese grosse Absatz kopieren werde. Danke Sehr! 
 
