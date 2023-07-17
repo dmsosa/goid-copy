@@ -11,20 +11,26 @@ import datetime
 from urllib.parse import quote
 search = "Taj mahal"
 import argparse
+from urllib import request
+import ssl
 
-p = argparse.ArgumentParser()
-p.add_argument('-k', '--key', required=False)
-p.add_argument('-m', '--mode', required=True)
-p.add_argument('-n', '--number', required=False)
-arg = p.parse_args()
-search_keyword = 'pepe'
-wanted = ['number']
-values = [i[1] for i in arg._get_kwargs() if i[1] is not None and i[0] in wanted]
-print(values)
-dir_name = search_keyword
-for j in values:
-    dir_name += (" - " + j if j is not None else '')
-print(dir_name)
+value = 2
+headers = {
+    'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
+                }
+ctx = ssl._create_unverified_context()
+def get_single_erland():
+
+    global value 
+    x = value
+    print(x)
+
+
+get_single_erland()
+
+
+
+
 # opt = Options()
 # opt.add_experimental_option('detach', True)
 # # opt.add_argument('--headless=new')

@@ -82,6 +82,28 @@ def download_page(url):
                 return rawPage
             except Exception as err:
                 print(err)
+
+def _get_similar_images(url):
+    url = url
+    req = request.Request(url, headers=headers)
+    response = request.urlopen(req, None, timeout=10, context=ctx)
+    data = str(response.read())
+
+    #<a href=> finden
+    start = data.find('<h2 class="OkhOw gadasb">')
+    start_href = data.find('<a href="', start)
+    end_href = data.find('"', start_href+9)
+    href = data[start_href+9:end_href]
+    data = data[end_href:]
+
+    #Query erhalten
+    query_start = href.find('?q=')
+    query_end = href.find('&amp;')
+    query = href[query_start+3:query_end]
+    
+    #Das query am unsere Schlusselwortliste hinzufugen
+    global search_keyword
+    search_keyword.append(query)
 def _images_get_next_item(s):
     start_line = s.find('<img data-src=')
     if start_line == -1:
@@ -170,7 +192,6 @@ if args.single:
 
     print("Bilder erfolgreich gespeichert! =====> "+imgOutput)
     print("Programm Erfullt in "+str(total_time)+" Sekunden")
-    quit()
 else:
     
     i = 0
@@ -180,7 +201,7 @@ else:
     else:
         search_keyword = [str(i) for i in args.keywords.split(',')]
 
-    while i < len(search_keyword):
+    while i < len(search_keyword):  
         items = list()
         if args.url:
             url = args.url
