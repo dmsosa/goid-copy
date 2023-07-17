@@ -16,18 +16,20 @@ sys.stdout.reconfigure(encoding='utf-8')
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--keywords', help='Delimited keywords for searching images', required=False)
 parser.add_argument('-l', '--limit', help='Delimited list input', required=False)
-parser.add_argument('-d', '--draw', help='Filtering by draw', required=False, const=True, action='store_const')
 parser.add_argument('-c', '--color', help='Filtering by color', required=False, choices=[
-    'red','yellow','blue','orange','violet','green','brown','white','black','gray','pink','teal','purple'
-])
+    'red','yellow','blue','orange','violet','green','brown','white','black','gray','pink','teel','purple', 'brown'])
 parser.add_argument('-u', '--url', help='Die Bildern nach Benutzerurl herunterladen werden', required=False, type=str)
 parser.add_argument('-o', '--output', help='Entmoglich dir, den Name von Ausgeben zu auswahlen', required=False, type=str)
 parser.add_argument('-s', '--single', help='Macht es moglich, ein einzelnes Bilder zu herunterladen', required=False, type=str)
 parser.add_argument('-p', '--pause', help='Bezeicht die Zeit, dass wir warten wird zwischen Bildern', required=False, type=str)
+parser.add_argument('-g', '--grosse', help='Sagt Sie, wie Grosse den Bildern sollen sind', required=False, choices=['large','medium','icon'])
+parser.add_argument('-t', '--type', help='Bezeicht die Typ oder Art von Bildern dass wir finden wird', required=False, choices=['face','photo','clip-art','lineart','animated'])
+parser.add_argument('-z', '--time', help='Bezeicht die Zeit, in dass den Bildern hochgeladen wurden', required=False, choices=['past-24-hours','past-7-days','past-1-month','past-1-year'])
+parser.add_argument('-r', '--rechte', help='Wahlen Sie der Zweck der Verwendung dieses Bildern', required=False, type=str, choices=['labled-for-reuse-with-modifications','labled-for-reuse','labled-for-noncommercial-reuse-with-modification','labled-for-nocommercial-reuse'])
 
 args = parser.parse_args()
 
-
+#============= Parameter prufen =============
 
 if (args.keywords is None) and (args.url is None) and (args.single is None):
     parser.error('Keywordsargument obligatorisch ist!')
@@ -49,11 +51,16 @@ if args.pause:
         pause = int(args.pause)
     except ValueError:
         parser.error('Die Pause muss ein Zahl sein!')
-#Globalen Variablen initialisieren
+
+##============= Globalen Variablen initialisieren =============
+
 headers = {
     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
                 }
 ctx = ssl._create_unverified_context()
+
+
+#============= Funktionen erstellen =================
 
 def download_page(url):
         version = (3,0)
@@ -103,7 +110,29 @@ def _images_get_all_images(page):
                 break
     return items
 
-#Die tatsache programm
+def _url_bauen(search):
+    bauen = "&tbs="
+    root = 'https://www.google.com/search?q='
+    base = '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch'
+    closer = '&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
+
+    color_param = ('&tbs=ic:specific,isc:'+str(args.color) if args.color else '')
+    type_param = ('itp:' + args.type if args.type else '')
+    other_params = {
+        'grosse':[args.grosse, {'large':'isz:l', 'medium':'isz:m', 'small':'isz:s', 'icon':'isz:i'}], 
+        'rechte':[args.rechte, {'labled-for-reuse-with-modifications':'sur:fmc', 'labled-for-reuse':'sur:fc','labled-for-noncommercial-reuse-with-modification':'sur:fm','labled-for-nocommercial-reuse':'sur:f'}],
+        'time':[args.time, {'past-24-hours':'qdr:d','past-7-days':'qdr:w', 'past-1-year':'qdr:y'}]
+          }
+    bauen = bauen + "," + color_param + "," + type_param
+    for i in other_params:
+        value = other_params[i][0]
+        if value is not None:
+            output_param = other_params[i][1][value]
+            bauen += ","+output_param
+
+    url = root+search+base+bauen+closer
+    return url
+#============= Das Hauptprogramm =============
 
 t0 = time.time()
 
@@ -146,11 +175,6 @@ else:
     
     i = 0
 
-    root = 'https://www.google.com/search?q='
-    base = '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
-    color_param = ('&tbs=ic:specific,isc:'+str(args.color) if args.color else '')
-    draw_param = ('&tbs=ic:gray,itp:lineart' if args.draw else '')
-
     if args.url:
         search_keyword = str(datetime.datetime.now()).split('.')[0].split()[0]
     else:
@@ -160,7 +184,15 @@ else:
         items = list()
         if args.url:
             url = args.url
-            dir_name = search_keyword + (" - " + str(args.color) if args.color else '')
+
+            # Der Name den Dateiort bauen
+            dir_name = search_keyword
+            values = [i[1] for i in args._get_kwargs() if i[1] is not None]
+            if len(values) > 0:
+                for value in values:
+                    dir_name += (" - " + value)
+
+            #Dateiort bauen
             sub_directory = os.path.join(main_dir, dir_name)
             try:
                 if not os.path.exists(sub_directory):
@@ -203,11 +235,24 @@ else:
         else: 
             iteration = "Item no.: " + str(i+1) + " -->" + " Item name = " + str(search_keyword[i])
             print (iteration)
+
+            # Den Textdatei schreiben
             with open('./links.txt', 'a', encoding='utf-8') as info:
                 info.write(str(i+1)+": "+str(search_keyword[i])+"\n")
+
+            #Suchenwort definieren
             search_keywords = search_keyword[i]
             search = quote(search_keywords)
-            dir_name = search_keywords + (" - " + str(args.color) if args.color else '')
+
+            # Der Name der Dateiort erstellen
+            dir_name = search_keywords
+            intended_args = ['color','type','gross','rechte','time']
+            values = [i[1] for i in args._get_kwargs() if i[0] in intended_args and i[1] is not None]
+            if len(values) > 0:
+                for value in values:
+                    dir_name += (" - " + value)
+
+            # Der Aussgabeverzeichnisses erstellen
             sub_directory = os.path.join(main_dir, dir_name)
             try:
                 if not os.path.exists(sub_directory):
@@ -216,7 +261,8 @@ else:
                 if e.errno != 17:
                     raise
             pass
-            url = root + search + base + color_param + draw_param
+            url = _url_bauen(search)
+
         page = download_page(url)
         time.sleep(0.05)
         items = items + _images_get_all_images(page)

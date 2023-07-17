@@ -68,6 +68,14 @@ Um die Farbe oder Zeichnungfilter zu benutz
 
 `python google-images-download.py -k "playground" -l 20 -c red`
 
+* Um Bildern mit Typ und Grosse Merkmalen herunterladen
+
+`python google-images-download.py --keywords "baloons" --grosse medium --type animated`
+
+* Um Bildern mit Verwendungrechten zu herunter
+
+`python google-images-download.py --keywords "universe" --rechte labled-for-reuse`
+
 ===> Die Bildern in ihren eigenen Verzeichnissen im selben Ort wie die Pythondatei heruntergeladen werden
 
 ---

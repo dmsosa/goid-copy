@@ -10,8 +10,21 @@ import time
 import datetime
 from urllib.parse import quote
 search = "Taj mahal"
+import argparse
 
-
+p = argparse.ArgumentParser()
+p.add_argument('-k', '--key', required=False)
+p.add_argument('-m', '--mode', required=True)
+p.add_argument('-n', '--number', required=False)
+arg = p.parse_args()
+search_keyword = 'pepe'
+wanted = ['number']
+values = [i[1] for i in arg._get_kwargs() if i[1] is not None and i[0] in wanted]
+print(values)
+dir_name = search_keyword
+for j in values:
+    dir_name += (" - " + j if j is not None else '')
+print(dir_name)
 # opt = Options()
 # opt.add_experimental_option('detach', True)
 # # opt.add_argument('--headless=new')
