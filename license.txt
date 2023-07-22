@@ -1,6 +1,6 @@
 The DUVI License (DUVI)
 
-Copyright (c) 2015 Duvi Sosa
+Copyright (c) 2023 - Duvi Sosa
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the Software), to deal
