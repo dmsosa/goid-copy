@@ -14,7 +14,7 @@ import argparse
 from urllib import request
 import ssl, os, sys
 from pathlib import Path, PureWindowsPath
-print(sys.version_info)
+print(sys.)
 
 # headers = {
 #     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'

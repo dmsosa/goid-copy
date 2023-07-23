@@ -9,9 +9,9 @@ import time, datetime #Wie mochten es wissen, wie lang unsere Programm zu beende
 import sys, os, ssl #Sys und os Library zu importieren
 from urllib import request
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, unquote
+from urllib.parse import quote, unquote_plus
 import argparse
-from pathlib import Path, PureWindowsPath
+
 
 #Selenium benutzen, falls es notwendig ist
 from selenium import webdriver
@@ -24,7 +24,7 @@ parser.add_argument('-l', '--limit', help='Delimited list input', required=False
 parser.add_argument('-c', '--color', help='Filtering by color', required=False, choices=[
     'red','yellow','blue','orange','violet','green','brown','white','black','gray','pink','teel','purple', 'brown'])
 parser.add_argument('-ct', '--colortype', help='Filtern nach Farbenart', required=False, choices=['full-color', 'black-and-white', 'transparent'])
-parser.add_argument('-u', '--url', help='Die Bildern nach Benutzerurl herunterladen werden', required=False, type=str)
+parser.add_argument('-u', '--url', help='Die Bildern nach Benutzerurl herunterladen werden', required=False)
 parser.add_argument('-o', '--output', help='Entmoglich dir, den Name von Ausgeben zu auswahlen', required=False, type=str)
 parser.add_argument('-s', '--single', help='Macht es moglich, ein einzelnes Bilder zu herunterladen', required=False, type=str)
 parser.add_argument('-p', '--pause', help='Bezeicht die Zeit, dass wir warten wird zwischen Bildern', required=False, type=str)
@@ -39,12 +39,13 @@ parser.add_argument('-w', '--webseite', help='Geben Sie an, die Webseite vor den
 
 
 args = parser.parse_args()
-
 #============= Parameter prufen =============
 
 if (args.keywords is None) and (args.url is None) and (args.single is None):
     parser.error('Keywordsargument obligatorisch ist!')
 
+if args.keywords:
+    search_keyword = [str(i) for i in args.keywords.split(',')]
 if args.limit:
     limit = int(args.limit)
     if int(args.limit) >= 100:
@@ -79,25 +80,25 @@ ctx = ssl._create_unverified_context()
 
 #============= Funktionen erstellen =================
 
-def download_page(url):
+def download_page(url, mode=''):
         version = (3,0)
         current_version = sys.version_info
         if current_version >= version:
-            
             try:
                 headers = {
                     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
                 }
                 req = request.Request(url, headers=headers)
-                try:
-                    resp = request.urlopen(req,data=None, timeout=10)
-                except:
-                    resp = request.urlopen(req,data=None, timeout=10, context=ctx)
-                rawPage = str(resp.read())
+                resp = request.urlopen(req, timeout=10, context=ctx)
+                if mode == 'str':
+                    rawPage = str(resp.read())
+                else:
+                    rawPage = resp.read()
                 # print(rawPage)
                 return rawPage
             except Exception as err:
                 print(err)
+                return 'Page Not Found'
 
 def _get_similar_images(url, n_Times):
     url = url
@@ -143,7 +144,7 @@ def _get_similar_images(url, n_Times):
 
             #Das query am unsere Schlusselwortliste hinzufugen
             global search_keyword
-            search_keyword.append(unquote(query))
+            search_keyword.append(unquote_plus(query))
             c += 1
 def _images_get_next_item(s):
     start_line = s.find('<img data-src=')
@@ -173,20 +174,29 @@ def _images_get_all_images(page):
                 break
     return items
 def _find_search(url):
-    global k
-    start = url.find('?q=')
-    end = url.find("&")
-    search_term = url[start+3:end]
+    start = url.find('q=')
+    end = url.find("&tbm=")
+    search_term = url[start+2:end]
     return search_term
 def _find_name(url):
     imgName = url[url.rfind('/'):]
     if '?' in imgName:
         imgName = imgName[:imgName.find('?')]
-    imgName = unquote(imgName)
-    if ('.jpg' not in imgName) and ('.jpeg' not in imgName) and ('.png'  not in imgName) and ('.svg'  not in imgName) and ('.tbn' not in imgName) and ('.gif' not in imgName) and ('svg' not in imgName):
-        if args.format: imgOutput = imgName + " " + str(k+1) + "." + args.format
-        else: imgOutput = imgName + " " + str(k+1) + ".jpg"
-    return imgOutput 
+    imgName = unquote_plus(imgName)
+    #Extension entfernen
+    imgName = imgName[:imgName.rfind('.')]
+    return imgName
+def _save_image(directory, data, imgName):
+    try:
+        if args.format:
+            with open(directory +"/"+ imgName + "." + args.format, "wb") as saver:
+                saver.write(data)
+        else:
+            with open(directory +"/"+ imgName + ".jpg", "wb") as saver:
+                saver.write(data)
+    except Exception as err:
+        print(err, "- image not saved")
+
 def _url_bauen(search):
     bauen = "&tbs="
     root = 'https://www.google.com/search?q='
@@ -224,9 +234,8 @@ def _create_dir(*directories):
             if c == 0:
                 target += i
             else:
-                target += "\\"+i
+                target += "/"+i
             c += 1
-        target = Path(target)
         os.makedirs(target)
     except OSError as e:
         if e.errno != 17:
@@ -243,21 +252,11 @@ def _set_name(dir):
             value = value[:value.find('.')]
         worked_name += " - " + value
     return worked_name
-#============= Das Hauptprogramm =============
 
-t0 = time.time()
-
-if args.single:
+def _single_image_download():
     url = args.single
     try:
-        os.makedirs(main_dir)
-    except OSError as e:
-        if e.errno != 17:
-            raise
-        pass
-    try:
         imgData = download_page(url)
-        imgName = url[(url.rfind('/')+1):]
     except HTTPError:
         print("HTTP Fehler!")
     except URLError:
@@ -265,30 +264,37 @@ if args.single:
     except IOError:
         print("IO Fehler!")
     imgName = _find_name(url)
-    target_dir = _create_dir(main_dir, imgName)
-    with open(target_dir, 'wb') as saver:
-        saver.write(imgData)
+    directory = _create_dir(main_dir)
+    _save_image(directory, data=imgData, imgName=imgName)
+
 
     t1 = time.time()
     total_time = t1 - t0
 
-    print("Bilder erfolgreich gespeichert! =====> "+imgOutput)
+    print("Bilder erfolgreich gespeichert! =====> "+imgName)
     print("Programm Erfullt in "+str(total_time)+" Sekunden")
-else:
-    
-    i = 0
+#============= Das Hauptprogramm =============
 
+
+t0 = time.time()
+
+if args.output:
+    main_dir = args.output
+else: main_dir = 'downloads'
+
+if args.single:
+    _single_image_download()
+else:
+    i = 0
     if args.url:
+        url = args.url
         search_keyword = []
-        search = _find_search(args.url)
+        search = _find_search(url)
+        print("search", search)
         search_keyword.append(search)
         if args.ahnlich:
             _get_similar_images(args.url, args.ahnlich)
-    else:
-        search_keyword = [str(i) for i in args.keywords.split(',')]
-        if args.ahnlich:
-            _get_similar_images(args.url, args.ahnlich)
-
+    print(search_keyword)
     while i < len(search_keyword):  
 
         items = list()
@@ -307,9 +313,12 @@ else:
         dir_name = _set_name(word)
 
         # Der Aussgabeverzeichnisses erstellen
-        target_dir = _create_dir(main_dir, dir_name)
+    
         url = _url_bauen(search)
-        page = download_page(url)
+        if args.ahnlich and i == 0:
+            _get_similar_images(url, args.ahnlich)
+            print('Total to look for > ', search_keyword)
+        page = download_page(url, mode='str')
         time.sleep(0.05)
         items = items + _images_get_all_images(page)
 
@@ -337,12 +346,10 @@ else:
         while k < len(items):
             try:
                 imgURL = items[k]
-                data = download_page(imgURL)
+                data = download_page(imgURL, mode='bytes')
                 imgName = _find_name(imgURL)
-
-                saver = open(os.path.join(target_dir), "wb")
-                saver.write(data)
-                saver.close()
+                directory = _create_dir(main_dir, dir_name)
+                _save_image(directory, data=data, imgName=str(k+1))
                 print("Bild "+str(k+1)+" gespeichert")
                 k += 1
             except HTTPError:
