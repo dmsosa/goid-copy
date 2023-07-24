@@ -20,6 +20,7 @@ from selenium.webdriver.common.by import By
 sys.stdout.reconfigure(encoding='utf-8')
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--keywords', help='Delimited keywords for searching images', required=False)
+parser.add_argument('-sk', '--suffix', help='suffix keywords for searching more related images', required=False)
 parser.add_argument('-l', '--limit', help='Delimited list input', required=False)
 parser.add_argument('-c', '--color', help='Filtering by color', required=False, choices=[
     'red','yellow','blue','orange','violet','green','brown','white','black','gray','pink','teel','purple', 'brown'])
@@ -27,7 +28,7 @@ parser.add_argument('-ct', '--colortype', help='Filtern nach Farbenart', require
 parser.add_argument('-u', '--url', help='Die Bildern nach Benutzerurl herunterladen werden', required=False)
 parser.add_argument('-o', '--output', help='Entmoglich dir, den Name von Ausgeben zu auswahlen', required=False, type=str)
 parser.add_argument('-s', '--single', help='Macht es moglich, ein einzelnes Bilder zu herunterladen', required=False, type=str)
-parser.add_argument('-p', '--pause', help='Bezeicht die Zeit, dass wir warten wird zwischen Bildern', required=False, type=str)
+parser.add_argument('-p', '--pause', help='Bezeicht die Zeit, dass wir warten wird zwischen Bildern', required=False, type=int)
 parser.add_argument('-g', '--grosse', help='Sagt Sie, wie Grosse den Bildern sollen sind', required=False, choices=['large','medium','icon'])
 parser.add_argument('-t', '--type', help='Bezeicht die Typ oder Art von Bildern dass wir finden wird', required=False, choices=['face','photo','clip-art','lineart','animated'])
 parser.add_argument('-z', '--time', help='Bezeicht die Zeit, in dass den Bildern hochgeladen wurden', required=False, choices=['past-24-hours','past-7-days','past-1-month','past-1-year'])
@@ -44,8 +45,16 @@ args = parser.parse_args()
 if (args.keywords is None) and (args.url is None) and (args.single is None):
     parser.error('Keywordsargument obligatorisch ist!')
 
+if args.suffix:
+    suffix_keywords = [str(i).strip() for i in args.suffix.split(",")]
+else:
+    suffix_keywords = None
+
 if args.keywords:
     search_keyword = [str(i) for i in args.keywords.split(',')]
+    if args.suffix:
+        for i in suffix_keywords:
+            search_keyword.append(args.keywords+" "+i)
 if args.limit:
     limit = int(args.limit)
     if int(args.limit) >= 100:
@@ -105,7 +114,6 @@ def _get_similar_images(url, n_Times):
     req = request.Request(url, headers=headers)
     response = request.urlopen(req, None, timeout=10, context=ctx)
     data = str(response.read())
-
     #<a href=> finden
     c = 0
     if n_Times > 12:
@@ -146,8 +154,8 @@ def _get_similar_images(url, n_Times):
             global search_keyword
             search_keyword.append(unquote_plus(query))
             c += 1
-def _images_get_next_item(s):
-    start_line = s.find('<img data-src=')
+def _images_get_next_item(rawPage):
+    start_line = rawPage.find('<img data-src=')
     if start_line == -1:
         end_quote = 0
         link = "no links"
@@ -155,9 +163,14 @@ def _images_get_next_item(s):
     else:
         # start_line = s.find('<img data-src=')
         # start_content = s.find('imgurl=',start_line+1)
-        end_content = s.find('" data-ils',start_line+15)
-        content_raw = str(s[start_line+15:end_content])
-        return content_raw, end_content
+        end_content = rawPage.find('" data-ils',start_line+15)
+        content_raw = str(rawPage[start_line+15:end_content])
+        if 'FLAVICON' not in content_raw:
+            return content_raw, end_content
+        else: 
+            link = 'no links'
+            end_quote = 0
+            return link, end_quote
 def _images_get_all_images(page):
     items = []
     while True:
@@ -185,17 +198,27 @@ def _find_name(url):
     imgName = unquote_plus(imgName)
     #Extension entfernen
     imgName = imgName[:imgName.rfind('.')]
+    imgName = imgName.replace(".", "-")
     return imgName
 def _save_image(directory, data, imgName):
-    try:
-        if args.format:
-            with open(directory +"/"+ imgName + "." + args.format, "wb") as saver:
-                saver.write(data)
-        else:
-            with open(directory +"/"+ imgName + ".jpg", "wb") as saver:
-                saver.write(data)
-    except Exception as err:
-        print(err, "- image not saved")
+    if type(data) is not str and type(data) is not None:
+        try:
+            if args.format:
+                target_dir = directory +"/"+ imgName + "." + args.format
+                if not os.path.exists(target_dir):
+                    with open(target_dir, "wb") as saver:
+                        saver.write(data)
+                else:print('Es gibt schon ein Bilder!')
+            else:
+                target_dir = directory +"/"+ imgName + ".jpg"
+                
+                if not os.path.exists(target_dir):
+                    with open(target_dir, "wb") as saver:
+                        saver.write(data)
+                else: print('Es gibt schon ein Bilder!')
+        except Exception as err:
+            print(err, "- image not saved")
+    else: print("Kein Bild, image not saved")
 
 def _url_bauen(search):
     bauen = "&tbs="
@@ -203,22 +226,27 @@ def _url_bauen(search):
     base = '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch'
     closer = '&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
 
-    color_param = ('&tbs=ic:specific,isc:'+str(args.color) if args.color else '')
-    type_param = ('itp:' + args.type if args.type else '')
-    format_param = ('ift:'+ args.format if args.format else '')
-    other_params = {
+    params = {
+        'color':[args.color, {'red':'ic:specific,isc:red', 'orange':'ic:specific,isc:orange', 'yellow':'ic:specific,isc:yellow', 'green':'ic:specific,isc:green', 'teal':'ic:specific,isc:teel', 'blue':'ic:specific,isc:blue', 'purple':'ic:specific,isc:purple', 'pink':'ic:specific,isc:pink', 'white':'ic:specific,isc:white', 'gray':'ic:specific,isc:gray', 'black':'ic:specific,isc:black', 'brown':'ic:specific,isc:brown'}],
+        'type':[args.type, {'face':'itp:face','photo':'itp:photo','clip-art':'itp:clip-art','line-drawing':'itp:lineart','animated':'itp:animated'}],
+        'format':[args.format, {'jpg':'ift:jpg','gif':'ift:gif','png':'ift:png','bmp':'ift:bmp','svg':'ift:svg','webp':'webp','ico':'ift:ico'}],
         'grosse':[args.grosse, {'large':'isz:l', 'medium':'isz:m', 'small':'isz:s', 'icon':'isz:i'}], 
         'rechte':[args.rechte, {'labled-for-reuse-with-modifications':'sur:fmc', 'labled-for-reuse':'sur:fc','labled-for-noncommercial-reuse-with-modification':'sur:fm','labled-for-nocommercial-reuse':'sur:f'}],
         'time':[args.time, {'past-24-hours':'qdr:d','past-7-days':'qdr:w', 'past-1-year':'qdr:y'}],
         'color-type':[args.colortype, {'full-color':'ic:color','black-and-white':'ic:gray', 'transparent':'ic:trans'}],
         'aspect_ratio':[args.aspekt,{'tall':'iar:t','square':'iar:s','wide':'iar:w','panoramic':'iar:xw'}]
           }
-    bauen = bauen + "," + color_param + "," + type_param + "," + format_param
-    for i in other_params:
-        value = other_params[i][0]
+    
+    c = 0
+    for i in params:
+        value = params[i][0]
         if value is not None:
-            output_param = other_params[i][1][value]
-            bauen += ","+output_param
+            output_param = params[i][1][value]
+            if c == 0:
+                bauen += output_param
+                c += 1
+            else:
+                bauen += ","+output_param
     if args.webseite:
         url = root+search+",site:"+args.webseite+base+bauen+closer
     else:
@@ -244,7 +272,7 @@ def _create_dir(*directories):
     return target
 def _set_name(dir):
     worked_name = dir
-    desired_args = ['color','type','gross','rechte','time','format','color-type','aspekt','webseite']
+    desired_args = ['color','type','gross','rechte','time','format','colortype','aspekt','webseite']
     values = [i[1] for i in args._get_kwargs() if i[0] in desired_args and i[1] is not None]
     for value in values:
         #Ausschielssen der Domain aus dem Webseite-Namen
@@ -275,99 +303,103 @@ def _single_image_download():
     print("Programm Erfullt in "+str(total_time)+" Sekunden")
 #============= Das Hauptprogramm =============
 
+def download(search_keyword, suffix_keyword, pause, main_dir, limit):
+    t0 = time.time()
 
-t0 = time.time()
+    if args.output:
+        main_dir = args.output
+    else: main_dir = 'downloads'
 
-if args.output:
-    main_dir = args.output
-else: main_dir = 'downloads'
+    if args.single:
+        _single_image_download()
+    else:
+        i = 0
+        if args.url:
+            url = args.url
+            search_keyword = []
+            search = _find_search(url)
+            print("search", search)
+            search_keyword.append(search)
+            if args.ahnlich:
+                _get_similar_images(args.url, args.ahnlich)
+        print(search_keyword)
+        while i < len(search_keyword):  
 
-if args.single:
-    _single_image_download()
-else:
-    i = 0
-    if args.url:
-        url = args.url
-        search_keyword = []
-        search = _find_search(url)
-        print("search", search)
-        search_keyword.append(search)
-        if args.ahnlich:
-            _get_similar_images(args.url, args.ahnlich)
-    print(search_keyword)
-    while i < len(search_keyword):  
+            items = list()
+            #Dateiort bauen
+            iteration = "Item no.: " + str(i+1) + " -->" + " Item name = " + str(search_keyword[i])
+            print (iteration)
+            # Den Textdatei schreiben
+            with open('./links.txt', 'a', encoding='utf-8') as info:
+                info.write(str(i+1)+": "+str(search_keyword[i])+"\n")
 
-        items = list()
-        #Dateiort bauen
-        iteration = "Item no.: " + str(i+1) + " -->" + " Item name = " + str(search_keyword[i])
-        print (iteration)
-        # Den Textdatei schreiben
-        with open('./links.txt', 'a', encoding='utf-8') as info:
-            info.write(str(i+1)+": "+str(search_keyword[i])+"\n")
+            #Suchenwort definieren
+            word = search_keyword[i]
+            search = quote(word)
 
-        #Suchenwort definieren
-        word = search_keyword[i]
-        search = quote(word)
+            # Der Name der Dateiort erstellen
+            dir_name = _set_name(word)
 
-        # Der Name der Dateiort erstellen
-        dir_name = _set_name(word)
-
-        # Der Aussgabeverzeichnisses erstellen
-    
-        url = _url_bauen(search)
-        if args.ahnlich and i == 0:
-            _get_similar_images(url, args.ahnlich)
-            print('Total to look for > ', search_keyword)
-        page = download_page(url, mode='str')
-        time.sleep(0.05)
-        items = items + _images_get_all_images(page)
-
-
-        print ("Image Links = "+str(items))
-        print ("Total Image Links = "+str(len(items)))
-        print ("\n")
-        #Mit die nachsten Codezeilen konnen Sie alle Links in am neues .txt Datei schreiben, denn wird an die selber verzeichnis wie Ihr Code erstellt. Sie konnen die folgende 3 Zeilen auskommentieren, um keine Datei zu schreiben 
-
-        #/////////////////Links.txt zu erstellen/////////////
+            # Der Aussgabeverzeichnisses erstellen
         
-        #Dem Datei schreiben
-        with open('./links.txt', 'a', encoding='utf-8') as info:
-            info.write(str(items)+"\n\n\n")
-        #Dem Datei zu schliessen
-        i += 1
-        t1 = time.time() 
-        total_time = t1 - t0 
-        # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
-        print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden")
+            url = _url_bauen(search)
+            if args.ahnlich and i == 0:
+                _get_similar_images(url, args.ahnlich)
+                print('Total to look for > ', search_keyword)
+            page = download_page(url, mode='str')
+            time.sleep(0.05)
+            items = items + _images_get_all_images(page)
 
-    #Bildern speichern
-        k = 0
-        errors = 0
-        while k < len(items):
-            try:
-                imgURL = items[k]
-                data = download_page(imgURL, mode='bytes')
-                imgName = _find_name(imgURL)
-                directory = _create_dir(main_dir, dir_name)
-                _save_image(directory, data=data, imgName=str(k+1))
+
+            print ("Image Links = "+str(items))
+            print ("Total Image Links = "+str(len(items)))
+            print ("\n")
+            #Mit die nachsten Codezeilen konnen Sie alle Links in am neues .txt Datei schreiben, denn wird an die selber verzeichnis wie Ihr Code erstellt. Sie konnen die folgende 3 Zeilen auskommentieren, um keine Datei zu schreiben 
+
+            #/////////////////Links.txt zu erstellen/////////////
+            
+            #Dem Datei schreiben
+            with open('./links.txt', 'a', encoding='utf-8') as info:
+                info.write(str(items)+"\n\n\n")
+            #Dem Datei zu schliessen
+            i += 1
+            t1 = time.time() 
+            total_time = t1 - t0 
+            # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
+            print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden")
+
+        #Bildern speichern
+            k = 0
+            errors = 0
+            while k < len(items):
+                try:
+                    imgURL = items[k]
+                    data = download_page(imgURL, mode='bytes')
+                    imgName = word + "-" + str(k+1)
+                    directory = _create_dir(main_dir, dir_name)
+                    _save_image(directory, data=data, imgName=imgName)
+                except HTTPError:
+                    print('HTTP Error in Bild: '+str(k+1))
+                    errors += 1
+                    k += 1
+                    continue
+                except URLError:
+                    print('URL Error in Bild: '+str(k+1))
+                    errors += 1
+                    k += 1
+                    continue
                 print("Bild "+str(k+1)+" gespeichert")
                 k += 1
-            except HTTPError:
-                print('HTTP Error in Bild: '+str(k+1))
-                errors += 1
-                k += 1
-            except URLError:
-                print('URL Error in Bild: '+str(k+1))
-                errors += 1
-                k += 1
-            # except IOError:
-            #     print('IO Error in Bild: '+str(k+1))
-            #     errors += 1
-            #     k += 1
-        print("\nAlle "+str(k+1)+" Bildern gespeichert fur "+word+", Bruder!\nFehleranzahl ===> "+str(errors))
+                # except IOError:
+                #     print('IO Error in Bild: '+str(k+1))
+                #     errors += 1
+                #     k += 1
+                if args.pause:
+                    time.sleep(args.pause)
+            print("\nAlle "+str(k)+" Bildern gespeichert fur " + word + ", Bruder!\nFehleranzahl ===> "+str(errors))
 
     #     /////////////////  Ende des Programm  /////////////////
 
 
-
+download(search_keyword, suffix_keywords, main_dir, limit, pause)
 # %%
