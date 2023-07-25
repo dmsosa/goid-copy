@@ -11,31 +11,28 @@ import datetime
 from urllib.parse import quote
 search = "Taj mahal"
 import argparse
+import requests
 from urllib import request
 import ssl, os, sys
 from pathlib import Path, PureWindowsPath
+bauen = "&tbs=ic:specific%2Cisc:red"
+root = 'https://www.google.com/search?q='
+base = '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch'
+closer = '&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
 
-searchUrl = 'https://www.google.com/search?q=dog&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
+url = root+'dragon'+base+bauen+closer
+
 headers = {}
 headers['User-Agent'] = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
 
-req1 = request.Request(searchUrl, headers=headers)
+req1 = request.Request(url, headers=headers)
 resp1 = request.urlopen(req1)
 content = str(resp1.read())
 print(content)
-l1 = content.find('AMhZZ')
-l2 = content.find('&', l1)
-urll = content[l1:l2]
-print('urll', urll)
-newurl = "https://www.google.com/search?tbs=sbi:" + urll + "&site=search&sa=X"
-req2 = request.Request(newurl, headers=headers)
-resp2 = request.urlopen(req2)
-print(resp2.read())
-l3 = content.find('/search?sa=X&amp;q=')
-l4 = content.find(';', l3 + 19)
+# session = requests.Session()
+# content = session.get(url, headers=headers) 
+# print(content.text)
 
-urll2 = content[l3 + 19:l4]
-print('urll2', urll2)
 
 # headers = {
 #     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'

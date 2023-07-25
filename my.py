@@ -67,7 +67,8 @@ if args.output:
 else:
     main_dir = 'downloads'
 
-if args.pause:
+pause = args.pause
+if pause:
     try:
         pause = int(args.pause)
     except ValueError:
@@ -223,12 +224,12 @@ def _save_image(directory, data, imgName):
 def _url_bauen(search):
     bauen = "&tbs="
     root = 'https://www.google.com/search?q='
-    base = '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch'
-    closer = '&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg'
+    base = '&tbm=isch'
+    closer = '&hl=pt&sa=X&ved=0CAIQpwVqFwoTCKDZgKG4qYADFQAAAAAdAAAAABAD&biw=1263&bih=648'
 
     params = {
         'color':[args.color, {'red':'ic:specific,isc:red', 'orange':'ic:specific,isc:orange', 'yellow':'ic:specific,isc:yellow', 'green':'ic:specific,isc:green', 'teal':'ic:specific,isc:teel', 'blue':'ic:specific,isc:blue', 'purple':'ic:specific,isc:purple', 'pink':'ic:specific,isc:pink', 'white':'ic:specific,isc:white', 'gray':'ic:specific,isc:gray', 'black':'ic:specific,isc:black', 'brown':'ic:specific,isc:brown'}],
-        'type':[args.type, {'face':'itp:face','photo':'itp:photo','clip-art':'itp:clip-art','line-drawing':'itp:lineart','animated':'itp:animated'}],
+        'type':[args.type, {'face':'itp:face','photo':'itp:photo','clip-art':'itp:clip-art','lineart':'itp:lineart','animated':'itp:animated'}],
         'format':[args.format, {'jpg':'ift:jpg','gif':'ift:gif','png':'ift:png','bmp':'ift:bmp','svg':'ift:svg','webp':'webp','ico':'ift:ico'}],
         'grosse':[args.grosse, {'large':'isz:l', 'medium':'isz:m', 'small':'isz:s', 'icon':'isz:i'}], 
         'rechte':[args.rechte, {'labled-for-reuse-with-modifications':'sur:fmc', 'labled-for-reuse':'sur:fc','labled-for-noncommercial-reuse-with-modification':'sur:fm','labled-for-nocommercial-reuse':'sur:f'}],
@@ -246,7 +247,7 @@ def _url_bauen(search):
                 bauen += output_param
                 c += 1
             else:
-                bauen += ","+output_param
+                bauen += "%2C"+output_param
     if args.webseite:
         url = root+search+",site:"+args.webseite+base+bauen+closer
     else:
@@ -342,6 +343,7 @@ def download(search_keyword, suffix_keyword, pause, main_dir, limit):
 
             # Der Aussgabeverzeichnisses erstellen
         
+            # url = _url_bauen(search)
             url = _url_bauen(search)
             if args.ahnlich and i == 0:
                 _get_similar_images(url, args.ahnlich)
@@ -395,7 +397,7 @@ def download(search_keyword, suffix_keyword, pause, main_dir, limit):
                 #     errors += 1
                 #     k += 1
                 if args.pause:
-                    time.sleep(args.pause)
+                    time.sleep(pause)
             print("\nAlle "+str(k)+" Bildern gespeichert fur " + word + ", Bruder!\nFehleranzahl ===> "+str(errors))
 
     #     /////////////////  Ende des Programm  /////////////////
