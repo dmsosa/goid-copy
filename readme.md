@@ -33,10 +33,11 @@ Dieses Kopie in Python 3.11.0 geschreiben ist und kann auf jeder Version von Pyt
 ---
 `py my.py [Argumente...]`
 
-### Argumente
+
 | Argument | Abkurzung | Beschreibung |
 | --- | :---: | --- |
-| **keywords** | k | Gibt die Worter an, nach denen Sie suchen mochten |
+| **keywords** | k | Gibt die Worter an, nach denen Sie suchen mochten. <br> Tips: <br> * Wenn du einfach die Wort schreibst, wird Google am besten versuchen, es abzugleichen <br> * Wenn Sie nach einer genaue Phrase suchen mochten, konnen Sie die Wort in doppelte Anfuhrungszeichen ("") setzen <br> * Wenn Sie dein suchen um eines der angegebenen Worter abzugleichen mochtest, schreibt Sie *OR* zwischen den Wortern. <br> * Wenn sie ein bestimmtest Wort explizit nicht mochten, schreibt Sie ein Minuszeichen (-) von dem Wort. |
+| **suffix** | sk | Geben Sie zusatzliche Nachsilben, um noch mehr Bildern zu erhalten. Es ist nutzlich, wenn sie zum verwandten Ergebnisse suchen mochtest. <br> Die endgultige Suchanfrage wurde wie folgt aussehen: "<keyword> <suffix keyword>"
 | **limit** | l | Bezeicht die Bildernnummer, die du erhalten mochtest |
 | **color** | c | Bezeicht die Farbe, an die die Bilderergebnisse erhalten mochte <br> Mogliche Werte: red, blue, yellow, green, orange, pink, violet, teal, black, white, gray |
 | **url** | u | Mit diese, kann man die spezielle URL von den Bildern herunterladen werden |
