@@ -22,6 +22,26 @@ Dieses Kopie in Python 3.11.0 geschreiben ist und kann auf jeder Version von Pyt
 
 
 --- 
+## Installation
+
+**pip benutzen**
+
+```
+
+$ pip install goidcopy
+
+```
+
+**Manuell**
+
+```
+
+$ git clone https://github.com/duvilearning/goidcopy.git
+
+$ cd goidcopy && sudo py setup.py install
+
+
+```
 
 ## Wie kann mann dieses Script benutz?
 
