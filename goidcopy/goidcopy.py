@@ -37,8 +37,8 @@ parser.add_argument('-f', '--format', help='Wahlen Sie der Format der Verwendung
 parser.add_argument('-a', '--ahnlich', help='Geben Sie an, ob Sie nach ahnlichen Bildern suchen mochte', required=False, type=int)
 parser.add_argument('-ar', '--aspekt', help='Geben Sie an, die Ratioaspekt den Bildern aus', required=False, type=str, choices=['tall', 'wide', 'panoramic', 'square'])
 parser.add_argument('-w', '--webseite', help='Geben Sie an, die Webseite vor den die Bildern herunterladen werden sollen', required=False, type=str)
-
-
+# parser.add_argument('-h', '--help', help='Zeichen des Hilfebeschreibung uber alle der obigen Argumente an')
+parser.add_argument('-pr', '--print', help="Zeichen Sie die URL von der gegeben Bildern!", default=False, action="store_true")
 args = parser.parse_args()
 #============= Parameter prufen =============
 
@@ -67,19 +67,23 @@ if args.output:
 else:
     main_dir = 'downloads'
 
-pause = args.pause
-if pause:
+if args.pause:
     try:
         pause = int(args.pause)
     except ValueError:
         parser.error('Die Pause muss ein Zahl sein!')
+if not args.pause: 
+    pause = 0
 
 if args.webseite:
     if "." not in args.webseite:
         parser.error("Ungultiger Webseite!")
     if " " in args.webseite:
         parser.error("Ungultiger Webseite!")
-
+if args.print:
+    printURL = 'yes'
+else:
+    printURL = 'no'
 ##============= Globalen Variablen initialisieren =============
 
 headers = {
@@ -253,7 +257,13 @@ def _url_bauen(search):
     else:
         url = root+search+base+bauen+closer
     return url
-
+def _write_txt(data, mode='item'):
+    if mode == 'item':
+        with open('./links.txt', 'a', encoding='utf-8') as writer:
+            writer.write(str(data[0])+":"+data[1]+" = \n\n")
+    if mode == 'content':
+        with open('./links.txt', 'a', encoding='utf-8') as writer:
+            writer.write(data +"\n\n\n")
 def _create_dir(*directories):
     try: 
         dirs = list(directories)
@@ -302,9 +312,11 @@ def _single_image_download():
 
     print("Bilder erfolgreich gespeichert! =====> "+imgName)
     print("Programm Erfullt in "+str(total_time)+" Sekunden")
+    return
+
 #============= Das Hauptprogramm =============
 
-def download(search_keyword, suffix_keyword, pause, main_dir, limit):
+def bulk_download(search_keyword, suffix_keyword, main_dir, limit, pause, printURL):
     t0 = time.time()
 
     if args.output:
@@ -330,12 +342,12 @@ def download(search_keyword, suffix_keyword, pause, main_dir, limit):
             #Dateiort bauen
             iteration = "Item no.: " + str(i+1) + " -->" + " Item name = " + str(search_keyword[i])
             print (iteration)
+            word = search_keyword[i]
             # Den Textdatei schreiben
-            with open('./links.txt', 'a', encoding='utf-8') as info:
-                info.write(str(i+1)+": "+str(search_keyword[i])+"\n")
+            tuple = (i+1, word)
+            _write_txt(tuple)
 
             #Suchenwort definieren
-            word = search_keyword[i]
             search = quote(word)
 
             # Der Name der Dateiort erstellen
@@ -361,21 +373,18 @@ def download(search_keyword, suffix_keyword, pause, main_dir, limit):
             #/////////////////Links.txt zu erstellen/////////////
             
             #Dem Datei schreiben
-            with open('./links.txt', 'a', encoding='utf-8') as info:
-                info.write(str(items)+"\n\n\n")
+            _write_txt(str(items), mode='content')
             #Dem Datei zu schliessen
-            i += 1
-            t1 = time.time() 
-            total_time = t1 - t0 
-            # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
-            print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden")
-
+            
         #Bildern speichern
             k = 0
             errors = 0
+            success = 1
             while k < len(items):
                 try:
                     imgURL = items[k]
+                    if printURL == 'yes':
+                        print("\n" + str(items[k]))
                     data = download_page(imgURL, mode='bytes')
                     imgName = word + "-" + str(k+1)
                     directory = _create_dir(main_dir, dir_name)
@@ -391,17 +400,26 @@ def download(search_keyword, suffix_keyword, pause, main_dir, limit):
                     k += 1
                     continue
                 print("Bild "+str(k+1)+" gespeichert")
+                success += 1
                 k += 1
-                # except IOError:
-                #     print('IO Error in Bild: '+str(k+1))
-                #     errors += 1
-                #     k += 1
-                if args.pause:
-                    time.sleep(pause)
-            print("\nAlle "+str(k)+" Bildern gespeichert fur " + word + ", Bruder!\nFehleranzahl ===> "+str(errors))
-
+                print(pause, "pauseee")
+                time.sleep(pause)
+            i += 1
+            if success < limit:
+                print("Leider konnte alle " + str(limit) + " Bildern nicht heruntergeladen werden, " + str(success) + " ist alles, was wir fur diesen Suchfilter bekommen haben!")
+            return errors
+            
     #     /////////////////  Ende des Programm  /////////////////
 
+if args.single:
+    _single_image_download()
+else:
+    t0 = time.time()
+    error_count = bulk_download(search_keyword, suffix_keywords, main_dir, limit, pause, printURL)
+    print('Alle Bildern herunterladen\nFehler:'+str(error_count)+"\n")
+    t1 = time.time() 
+    total_time = t1 - t0 
+    # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
+    print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden\n(ist die Zeit die wir verbracht haben, die Bildlinks zu finden!)")
 
-download(search_keyword, suffix_keywords, main_dir, limit, pause)
 # %%
