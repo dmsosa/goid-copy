@@ -64,6 +64,7 @@ $ cd goidcopy && sudo py setup.py install
 | **single** | s | Ermoglicht dir, ein einzelnes Bilder nach dem gegeben URL herunterladen |
 | **pause** | p | Ermoglicht dir, ein Zeitspanne zu geben, um jeden herunter zu erwarten |
 | **output** | o | Auswahlen Sie die Ort, wo die Bildern speichern werden |
+| **print** | pr | Entscheiden Sie, ob das URL die Seiten anzeigen soll oder nicht |
 | **type** | t | Entdecken Sie, welches Types die Bildern sind! |
 | **time** | z | Ermoglicht dir, ein Zeitspanne zu geben, um jeden herunter zu erwarten |
 | **rechte** | r | Erkennen Sie, wer die rechten von jeden Bildern habe! <br> Mogliche Ergegnisse:  labled-for-reuse-with-modifications, labled-for-reuse, labled-for-noncommercial-reuse-with-modification, labled-for-nocommercial-reuse |
