@@ -160,18 +160,31 @@ def _get_similar_images(url, n_Times):
             search_keyword.append(unquote_plus(query))
             c += 1
 def _images_get_next_item(rawPage):
-    start_line = rawPage.find('<img data-src=')
+    #Dieses Abfragen sind die Ziechenfolgen, nach denen wir suchen, um die Datei aus unseren Bildern zu extrahieren
+    queries = {'link':('<img data-src=', '" data-ils'),
+               'title':('<h3 class="bytUYc">', '</h3>'),
+               'height':('data-oh="','"'),
+               'width':('data-ow="','"'),
+               'height':('data-oh="','"')}
+    #Dateiinhalt finden
+    start_line = rawPage.find(queries['link'][0])
+    end_content = rawPage.find('</h3>', start_line)
     if start_line == -1:
         end_quote = 0
         link = "no links"
         return link, end_quote
     else:
-        # start_line = s.find('<img data-src=')
-        # start_content = s.find('imgurl=',start_line+1)
-        end_content = rawPage.find('" data-ils',start_line+15)
-        content_raw = str(rawPage[start_line+15:end_content])
-        if 'FLAVICON' not in content_raw:
-            return content_raw, end_content
+        #Link finden
+        end_link = rawPage.find(queries['link'][1],start_line+len(queries['link'][0]))
+        img_link = str(rawPage[start_line+len(queries['link'][0]):end_link])
+        #Titel finden
+        title_start = rawPage.find(queries['title'][0], start_line)
+        title_end = rawPage.find("</h3>", title_start+len(queries['title'][0]))
+        title = rawPage[title_start+len(queries['title'][0]):title_end]
+        #Hoch finden
+        rawPage.find()
+        if 'favicon' not in content_raw and 'FAVICON' not in content_raw:
+            return img_link, end_content
         else: 
             link = 'no links'
             end_quote = 0
@@ -361,7 +374,7 @@ def bulk_download(search_keyword, suffix_keyword, main_dir, limit, pause, printU
                 _get_similar_images(url, args.ahnlich)
                 print('Total to look for > ', search_keyword)
             page = download_page(url, mode='str')
-            time.sleep(0.05)
+            print(page)
             items = items + _images_get_all_images(page)
 
 
