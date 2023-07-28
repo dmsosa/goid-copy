@@ -52,9 +52,7 @@ else:
 
 if args.keywords:
     search_keyword = [str(i) for i in args.keywords.split(',')]
-    if args.suffix:
-        for i in suffix_keywords:
-            search_keyword.append(args.keywords+" "+i)
+
 if args.limit:
     limit = int(args.limit)
     if int(args.limit) >= 100:
@@ -84,6 +82,12 @@ if args.print:
     printURL = 'yes'
 else:
     printURL = 'no'
+if args.timeout:
+    try:
+        timeout = float(args.timeout)
+    except TypeError:
+        print("Die Zeituberschreitung ein Gleitkommazahlen sind muss!")
+else: timeout = 15
 ##============= Globalen Variablen initialisieren =============
 
 headers = {
@@ -103,7 +107,7 @@ def download_page(url, mode=''):
                     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
                 }
                 req = request.Request(url, headers=headers)
-                resp = request.urlopen(req, timeout=10, context=ctx)
+                resp = request.urlopen(req, data=None, timeout=timeout, context=ctx)
                 if mode == 'str':
                     rawPage = str(resp.read())
                 else:
@@ -113,6 +117,19 @@ def download_page(url, mode=''):
             except Exception as err:
                 print(err)
                 return 'Page Not Found'
+def download_image(url, dir, count, format=""):
+    global headers
+    if args.print:
+        print("BILDER URL:",url)
+    try:
+        data = download_page(url, mode='bytes')
+        imgName = _find_name(url)
+        if format == "":
+            imgName = imgName + "-" + str(count) + "." + "jpg"
+        else:
+            imgName = imgName + "-" + str(count) + "." + format
+        save_status = _save_image(dir, data, imgName)
+        size = _get_size()
 
 def _get_similar_images(url, n_Times):
     url = url
@@ -159,19 +176,29 @@ def _get_similar_images(url, n_Times):
             global search_keyword
             search_keyword.append(unquote_plus(query))
             c += 1
-def _images_get_next_item(rawPage):
+def _get_size(file_path):
+    if os.path.isfile(file_path):
+        file_info = os.stat(file_path)
+        size = file_info.st_size
+        for x in ['bytes', 'KB', 'MB', 'GB', 'TB']:
+            if size < 1024.0:
+                return "3%.1f %s"%(size, x)
+            size /= 1024.0
+
+def _get_next_item(rawPage):
     #Dieses Abfragen sind die Ziechenfolgen, nach denen wir suchen, um die Datei aus unseren Bildern zu extrahieren
     queries = {'link':('<img data-src=', '" data-ils'),
                'title':('<h3 class="bytUYc">', '</h3>'),
                'height':('data-oh="','"'),
                'width':('data-ow="','"'),
-               'height':('data-oh="','"')}
+               'site':('<div class="LAA3yd">','</div>')}
     #Dateiinhalt finden
     start_line = rawPage.find(queries['link'][0])
     end_content = rawPage.find('</h3>', start_line)
+    
     if start_line == -1:
         end_quote = 0
-        link = "no links"
+        link = "no_links"
         return link, end_quote
     else:
         #Link finden
@@ -182,27 +209,39 @@ def _images_get_next_item(rawPage):
         title_end = rawPage.find("</h3>", title_start+len(queries['title'][0]))
         title = rawPage[title_start+len(queries['title'][0]):title_end]
         #Hoch finden
-        rawPage.find()
-        if 'favicon' not in content_raw and 'FAVICON' not in content_raw:
-            return img_link, end_content
-        else: 
-            link = 'no links'
-            end_quote = 0
-            return link, end_quote
-def _images_get_all_images(page):
+        height_start = rawPage.find(queries['height'][0], start_line)
+        height_end = rawPage.find(queries['height'][1], height_start+len(queries['height'][0]))
+        height = rawPage [height_start+len(queries['height'][0]):height_end]
+        #Breite finden
+        width_start = rawPage.find(queries['width'][0], start_line)
+        width_end = rawPage.find(queries['width'][1], width_start+len(queries['height'][0]))
+        width = rawPage [width_start+len(queries['width'][0]):width_end]
+        #Seite finden
+        site_start = rawPage.find(queries['site'][0], start_line)
+        site_end = rawPage.find(queries['site'][1], queries['site'][0])
+        site = rawPage[site_start+len(queries['site'][0]):site_end]
+    dic_object = {'link':img_link, 'width':width, 'height':height, 'title':title, 'site':site}
+    return dic_object, end_content
+def _get_all_items(page, directory):
     items = []
-    while True:
-        item, end_content = _images_get_next_item(page)
-        if item == 'no links':
+    i = 0
+    count = 0
+    url = ''
+    format = (args.format if args.format else '')
+    while count < limit:
+        item_object, end_content = _get_next_item(page)
+        if item_object == 'no_links':
             print('no more links')
             break
         else:
-            items.append(item)
+            items.append(item_object)
+            count += 1
         #Alle die Items in dem List "Links" bekannt zu hinzufugen
         #Timer konnte verwendet werden, um den Anfrage fur das Herunterladen von Bildern zu verlangsamen
             page = page[end_content:]
-            if len(items) > limit:
-                break
+            download_status, download_message = download_image(url, directory, count, format)
+
+
     return items
 def _find_search(url):
     start = url.find('q=')
@@ -221,22 +260,21 @@ def _find_name(url):
 def _save_image(directory, data, imgName):
     if type(data) is not str and type(data) is not None:
         try:
-            if args.format:
-                target_dir = directory +"/"+ imgName + "." + args.format
-                if not os.path.exists(target_dir):
-                    with open(target_dir, "wb") as saver:
-                        saver.write(data)
-                else:print('Es gibt schon ein Bilder!')
-            else:
-                target_dir = directory +"/"+ imgName + ".jpg"
-                
-                if not os.path.exists(target_dir):
-                    with open(target_dir, "wb") as saver:
-                        saver.write(data)
-                else: print('Es gibt schon ein Bilder!')
+            target_dir = directory +"/"+ imgName
+            if not os.path.exists(target_dir):
+                with open(target_dir, "wb") as saver:
+                    saver.write(data)
+                    save_status = 'Bilder gespeichert!'
+                    return target_dir, save_status
+            else: 
+                save_status = 'Es gibt schon ein Bilder!'
+                return save_status
         except Exception as err:
-            print(err, "- image not saved")
-    else: print("Kein Bild, image not saved")
+            save_status = err + " - image not saved"
+            return save_status
+    else: 
+        save_status = "Kein Bild, image not saved"
+        return save_status
 
 def _url_bauen(search):
     bauen = "&tbs="
@@ -329,28 +367,33 @@ def _single_image_download():
 
 #============= Das Hauptprogramm =============
 
-def bulk_download(search_keyword, suffix_keyword, main_dir, limit, pause, printURL):
+def bulk_download(search_keyword, suffix_keywords, main_dir, limit, pause, printURL):
     t0 = time.time()
-
-    if args.output:
-        main_dir = args.output
-    else: main_dir = 'downloads'
 
     if args.single:
         _single_image_download()
+    elif args.url:
+        search_keyword = []
+        search = _find_search(args.url)
+        search_keyword.append(search)
+        if args.ahnlich:
+            _get_similar_images(args.url, args.ahnlich)
     else:
-        i = 0
-        if args.url:
-            url = args.url
-            search_keyword = []
-            search = _find_search(url)
-            print("search", search)
-            search_keyword.append(search)
-            if args.ahnlich:
-                _get_similar_images(args.url, args.ahnlich)
-        print(search_keyword)
-        while i < len(search_keyword):  
-
+        url = None
+        if args.ahnlich:
+            _get_similar_images(args.url, args.ahnlich)
+        for suffix in suffix_keywords:
+            i = 0 
+            while i < len(search_keyword):
+                iteration = "\nSuchen nu.:" + str(i+1) + " / / == > " + search_keyword[i] + " " + suffix
+                print(iteration+"\n"+"Evaluating...")
+                rootword = search_keyword[i]
+                word = search_keyword + suffix
+                dir_name = _set_name(word)
+                directory = _create_dir(main_dir, rootword, dir_name)
+                url = _url_bauen(word)
+                page = download_page(url)
+                items, error_count = _get_all_items(page)
             items = list()
             #Dateiort bauen
             iteration = "Item no.: " + str(i+1) + " -->" + " Item name = " + str(search_keyword[i])
@@ -365,7 +408,7 @@ def bulk_download(search_keyword, suffix_keyword, main_dir, limit, pause, printU
 
             # Der Name der Dateiort erstellen
             dir_name = _set_name(word)
-
+            directory = _create_dir(main_dir, dir_name)
             # Der Aussgabeverzeichnisses erstellen
         
             # url = _url_bauen(search)
@@ -375,7 +418,7 @@ def bulk_download(search_keyword, suffix_keyword, main_dir, limit, pause, printU
                 print('Total to look for > ', search_keyword)
             page = download_page(url, mode='str')
             print(page)
-            items = items + _images_get_all_images(page)
+            items = items + _get_all_items(page)
 
 
             print ("Image Links = "+str(items))
