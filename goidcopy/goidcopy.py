@@ -11,6 +11,7 @@ from urllib import request
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, unquote_plus
 import argparse
+import json
 
 
 #Selenium benutzen, falls es notwendig ist
@@ -37,8 +38,11 @@ parser.add_argument('-f', '--format', help='Wahlen Sie der Format der Verwendung
 parser.add_argument('-a', '--ahnlich', help='Geben Sie an, ob Sie nach ahnlichen Bildern suchen mochte', required=False, type=int)
 parser.add_argument('-ar', '--aspekt', help='Geben Sie an, die Ratioaspekt den Bildern aus', required=False, type=str, choices=['tall', 'wide', 'panoramic', 'square'])
 parser.add_argument('-w', '--webseite', help='Geben Sie an, die Webseite vor den die Bildern herunterladen werden sollen', required=False, type=str)
-# parser.add_argument('-h', '--help', help='Zeichen des Hilfebeschreibung uber alle der obigen Argumente an')
+parser.add_argument('-to', '--timeout', help='Geben Sie an, die Zeit die wir fur an Antwort von der System warten sollen')
 parser.add_argument('-pr', '--print', help="Zeichen Sie die URL von der gegeben Bildern!", default=False, action="store_true")
+parser.add_argument('-sc', '--write', help="Auswahlen sie, ob ein Textdatei zu erstellen oder nicht", default=False, action="store_true")
+parser.add_argument('-m', '--metadata', help="Geben Sie an, ob das Metadatei den Bildern zu gezeigt oder nicht", default=False, action="store_true")
+parser.add_argument('-au', '--auszug', help="Auswahlen Sie an, ob das Metadatei den Bildern zu auszugen oder nicht", default=False, action="store_true")
 args = parser.parse_args()
 #============= Parameter prufen =============
 
@@ -48,7 +52,7 @@ if (args.keywords is None) and (args.url is None) and (args.single is None):
 if args.suffix:
     suffix_keywords = [str(i).strip() for i in args.suffix.split(",")]
 else:
-    suffix_keywords = None
+    suffix_keywords = ['']
 
 if args.keywords:
     search_keyword = [str(i) for i in args.keywords.split(',')]
@@ -108,28 +112,49 @@ def download_page(url, mode=''):
                 }
                 req = request.Request(url, headers=headers)
                 resp = request.urlopen(req, data=None, timeout=timeout, context=ctx)
-                if mode == 'str':
-                    rawPage = str(resp.read())
-                else:
+                if mode == 'bytes':
                     rawPage = resp.read()
-                # print(rawPage)
+                else:
+                    rawPage = str(resp.read())
                 return rawPage
             except Exception as err:
                 print(err)
                 return 'Page Not Found'
-def download_image(url, dir, count, format=""):
-    global headers
+def download_image(object, dir, count, format=""):
+    try: 
+        url = object['link']
+    except KeyError:
+        print('Ungultiges Objekt!')
+        download_status = 'Versagen'
+        download_message = 'Es tut mir leid aber wir diese Datei nicht benutzen kann'
+        return object, download_status, download_message
+        
     if args.print:
         print("BILDER URL:",url)
     try:
+        #Seite herunterladen
         data = download_page(url, mode='bytes')
         imgName = _find_name(url)
         if format == "":
             imgName = imgName + "-" + str(count) + "." + "jpg"
         else:
             imgName = imgName + "-" + str(count) + "." + format
-        save_status = _save_image(dir, data, imgName)
-        size = _get_size()
+        img_path, save_status = _save_image(dir, data, imgName)
+        #Die Gross und die Zeit definieren
+        size = _get_size(img_path)
+        zeit = str(datetime.datetime.now()).split('.')[0]
+        object['size'] = size
+        object['time'] = zeit
+        download_status = 'Erfolg'
+        download_message = 'Die Bilder '+imgName+' erfolglich gespeichert ist /// 100% herunterladen'
+        return object, download_status, download_message
+
+    except Exception as err:
+        print(err)
+        download_status = 'Versagen'
+        download_message = 'Es tut mir leid aber die Bilder '+imgName+' kann nicht herunterladen werden'
+        return object, download_status, download_message
+        
 
 def _get_similar_images(url, n_Times):
     url = url
@@ -187,11 +212,11 @@ def _get_size(file_path):
 
 def _get_next_item(rawPage):
     #Dieses Abfragen sind die Ziechenfolgen, nach denen wir suchen, um die Datei aus unseren Bildern zu extrahieren
-    queries = {'link':('<img data-src=', '" data-ils'),
-               'title':('<h3 class="bytUYc">', '</h3>'),
-               'height':('data-oh="','"'),
-               'width':('data-ow="','"'),
-               'site':('<div class="LAA3yd">','</div>')}
+    queries = {'link':['<img data-src=', '" data-ils'],
+               'title':['<h3 class="bytUYc">', '</h3>'],
+               'height':['data-oh="','"'],
+               'width':['data-ow="','"'],
+               'site':['<div class="LAA3yd">','</div>']}
     #Dateiinhalt finden
     start_line = rawPage.find(queries['link'][0])
     end_content = rawPage.find('</h3>', start_line)
@@ -218,15 +243,19 @@ def _get_next_item(rawPage):
         width = rawPage [width_start+len(queries['width'][0]):width_end]
         #Seite finden
         site_start = rawPage.find(queries['site'][0], start_line)
-        site_end = rawPage.find(queries['site'][1], queries['site'][0])
+        site_end = rawPage.find(queries['site'][1], site_start)
         site = rawPage[site_start+len(queries['site'][0]):site_end]
     dic_object = {'link':img_link, 'width':width, 'height':height, 'title':title, 'site':site}
     return dic_object, end_content
-def _get_all_items(page, directory):
+def _get_all_items(page, directory, index):
     items = []
-    i = 0
     count = 0
-    url = ''
+    success = 0
+    error_count = 0
+    searchName = directory.split('/')[-1]
+    if args.write:
+        tuple = (index, searchName)
+        _write_txt(tuple)
     format = (args.format if args.format else '')
     while count < limit:
         item_object, end_content = _get_next_item(page)
@@ -234,15 +263,28 @@ def _get_all_items(page, directory):
             print('no more links')
             break
         else:
-            items.append(item_object)
             count += 1
         #Alle die Items in dem List "Links" bekannt zu hinzufugen
         #Timer konnte verwendet werden, um den Anfrage fur das Herunterladen von Bildern zu verlangsamen
             page = page[end_content:]
-            download_status, download_message = download_image(url, directory, count, format)
+            item_object, download_status, download_message = download_image(item_object, directory, count, format)
+            if download_status == 'Erfolg':
+                success += 1
+                items.append(item_object)
+                if args.metadata:
+                    print("Bilder Metadatei:\n"+str(item_object))
+                if args.write:
+                    _write_txt(str(item_object))
+                    print("Textdatei schreibt!")
+                    return items, error_count
+            else:
+                error_count += 1
+            if args.pause:
+                time.sleep(pause)
+    if success < limit:
+        print('Es tut mir leid, aber ' + str(success) + ' ist alles, dass wir fur dieses Seite haben!')
+    return items, error_count
 
-
-    return items
 def _find_search(url):
     start = url.find('q=')
     end = url.find("&tbm=")
@@ -268,13 +310,15 @@ def _save_image(directory, data, imgName):
                     return target_dir, save_status
             else: 
                 save_status = 'Es gibt schon ein Bilder!'
-                return save_status
+                return target_dir, save_status
         except Exception as err:
+            target_dir = 'no_path'
             save_status = err + " - image not saved"
-            return save_status
-    else: 
-        save_status = "Kein Bild, image not saved"
-        return save_status
+            return target_dir,  save_status
+    else:
+        target_dir = 'no_path' 
+        save_status = "Kein Datei, image not saved"
+        return target_dir,  save_status
 
 def _url_bauen(search):
     bauen = "&tbs="
@@ -379,21 +423,33 @@ def bulk_download(search_keyword, suffix_keywords, main_dir, limit, pause, print
         if args.ahnlich:
             _get_similar_images(args.url, args.ahnlich)
     else:
-        url = None
-        if args.ahnlich:
-            _get_similar_images(args.url, args.ahnlich)
+
         for suffix in suffix_keywords:
             i = 0 
             while i < len(search_keyword):
                 iteration = "\nSuchen nu.:" + str(i+1) + " / / == > " + search_keyword[i] + " " + suffix
                 print(iteration+"\n"+"Evaluating...")
                 rootword = search_keyword[i]
-                word = search_keyword + suffix
+                word = rootword + suffix
                 dir_name = _set_name(word)
                 directory = _create_dir(main_dir, rootword, dir_name)
                 url = _url_bauen(word)
                 page = download_page(url)
-                items, error_count = _get_all_items(page)
+                #Die Sucheliste zu vermehren
+                if args.ahnlich and i == 0:
+                    _get_similar_images(args.url, args.ahnlich)
+                i += 1
+                items, error_count = _get_all_items(page, directory, i)
+                print('JSOOOOOOOOOOOOOON',json.dumps(items, indent=4))
+                # if args.auszug:
+                #     zeit = str(time.ctime())
+                #     try:
+                #         if not os.path.exists('logs'):
+                #             os.makedirs('logs')
+                #     except OSError as error:
+                #         print(error)
+                #     with open('logs/json search: '+zeit+".json", "a") as js:
+                #         js
             items = list()
             #Dateiort bauen
             iteration = "Item no.: " + str(i+1) + " -->" + " Item name = " + str(search_keyword[i])
