@@ -51,6 +51,7 @@ if (args.keywords is None) and (args.url is None) and (args.single is None):
 
 if args.suffix:
     suffix_keywords = [str(i).strip() for i in args.suffix.split(",")]
+    suffix_keywords.insert(0, '')
 else:
     suffix_keywords = ['']
 
@@ -115,14 +116,15 @@ def download_page(url, mode=''):
                 if mode == 'bytes':
                     rawPage = resp.read()
                 else:
-                    rawPage = str(resp.read())
+
+                    rawPage = str(resp.read().decode('utf-8'))
                 return rawPage
             except Exception as err:
                 print(err)
                 return 'Page Not Found'
 def download_image(object, dir, count, format=""):
     try: 
-        url = object['link']
+        url = object[1]['link']
     except KeyError:
         print('Ungultiges Objekt!')
         download_status = 'Versagen'
@@ -143,12 +145,11 @@ def download_image(object, dir, count, format=""):
         #Die Gross und die Zeit definieren
         size = _get_size(img_path)
         zeit = str(datetime.datetime.now()).split('.')[0]
-        object['size'] = size
-        object['time'] = zeit
+        object[1]['size'] = size
+        object[1]['time'] = zeit
         download_status = 'Erfolg'
         download_message = 'Die Bilder '+imgName+' erfolglich gespeichert ist /// 100% herunterladen'
         return object, download_status, download_message
-
     except Exception as err:
         print(err)
         download_status = 'Versagen'
@@ -220,15 +221,14 @@ def _get_next_item(rawPage):
     #Dateiinhalt finden
     start_line = rawPage.find(queries['link'][0])
     end_content = rawPage.find('</h3>', start_line)
-    
     if start_line == -1:
         end_quote = 0
-        link = "no_links"
-        return link, end_quote
+        img_object = "no_links"
+        return img_object, end_quote
     else:
         #Link finden
         end_link = rawPage.find(queries['link'][1],start_line+len(queries['link'][0]))
-        img_link = str(rawPage[start_line+len(queries['link'][0]):end_link])
+        img_link = str(rawPage[start_line+len(queries['link'][0])+1:end_link])
         #Titel finden
         title_start = rawPage.find(queries['title'][0], start_line)
         title_end = rawPage.find("</h3>", title_start+len(queries['title'][0]))
@@ -245,8 +245,8 @@ def _get_next_item(rawPage):
         site_start = rawPage.find(queries['site'][0], start_line)
         site_end = rawPage.find(queries['site'][1], site_start)
         site = rawPage[site_start+len(queries['site'][0]):site_end]
-    dic_object = {'link':img_link, 'width':width, 'height':height, 'title':title, 'site':site}
-    return dic_object, end_content
+    img_object = (title[:16], {'link':img_link, 'width':width, 'height':height, 'title':title, 'site':site})
+    return img_object, end_content
 def _get_all_items(page, directory, index):
     items = []
     count = 0
@@ -255,7 +255,7 @@ def _get_all_items(page, directory, index):
     searchName = directory.split('/')[-1]
     if args.write:
         tuple = (index, searchName)
-        _write_txt(tuple)
+        _write_txt(tuple, mode='item')
     format = (args.format if args.format else '')
     while count < limit:
         item_object, end_content = _get_next_item(page)
@@ -352,7 +352,7 @@ def _url_bauen(search):
     else:
         url = root+search+base+bauen+closer
     return url
-def _write_txt(data, mode='item'):
+def _write_txt(data, mode='content'):
     if mode == 'item':
         with open('./links.txt', 'a', encoding='utf-8') as writer:
             writer.write(str(data[0])+":"+data[1]+" = \n\n")
@@ -388,6 +388,7 @@ def _set_name(dir):
     return worked_name
 
 def _single_image_download():
+    t0 = time.time()
     url = args.single
     try:
         imgData = download_page(url)
@@ -413,124 +414,55 @@ def _single_image_download():
 
 def bulk_download(search_keyword, suffix_keywords, main_dir, limit, pause, printURL):
     t0 = time.time()
-
-    if args.single:
-        _single_image_download()
-    elif args.url:
+    total_errors = 0
+    if args.url:
         search_keyword = []
         search = _find_search(args.url)
         search_keyword.append(search)
+        url = args.url
         if args.ahnlich:
-            _get_similar_images(args.url, args.ahnlich)
-    else:
-
-        for suffix in suffix_keywords:
-            i = 0 
-            while i < len(search_keyword):
-                iteration = "\nSuchen nu.:" + str(i+1) + " / / == > " + search_keyword[i] + " " + suffix
-                print(iteration+"\n"+"Evaluating...")
-                rootword = search_keyword[i]
-                word = rootword + suffix
-                dir_name = _set_name(word)
-                directory = _create_dir(main_dir, rootword, dir_name)
-                url = _url_bauen(word)
-                page = download_page(url)
-                #Die Sucheliste zu vermehren
-                if args.ahnlich and i == 0:
-                    _get_similar_images(args.url, args.ahnlich)
-                i += 1
-                items, error_count = _get_all_items(page, directory, i)
-                print('JSOOOOOOOOOOOOOON',json.dumps(items, indent=4))
-                # if args.auszug:
-                #     zeit = str(time.ctime())
-                #     try:
-                #         if not os.path.exists('logs'):
-                #             os.makedirs('logs')
-                #     except OSError as error:
-                #         print(error)
-                #     with open('logs/json search: '+zeit+".json", "a") as js:
-                #         js
-            items = list()
-            #Dateiort bauen
-            iteration = "Item no.: " + str(i+1) + " -->" + " Item name = " + str(search_keyword[i])
-            print (iteration)
-            word = search_keyword[i]
-            # Den Textdatei schreiben
-            tuple = (i+1, word)
-            _write_txt(tuple)
-
-            #Suchenwort definieren
-            search = quote(word)
-
-            # Der Name der Dateiort erstellen
+            _get_similar_images(url, args.ahnlich)
+    for suffix in suffix_keywords:
+        i = 0 
+        while i < len(search_keyword):
+            rootword = search_keyword[i]
+            word = rootword + " " + suffix
+            iteration = "\nSuchen nu.:" + str(i+1) + " / / == > " + word
+            print(iteration+"\n"+"Evaluating...")
             dir_name = _set_name(word)
-            directory = _create_dir(main_dir, dir_name)
-            # Der Aussgabeverzeichnisses erstellen
-        
-            # url = _url_bauen(search)
-            url = _url_bauen(search)
+            directory = _create_dir(main_dir, rootword, dir_name)
+            if args.url is None or i > 0:
+                url = _url_bauen(quote(word))
+            page = download_page(url)
+            #Die Sucheliste zu vermehren
             if args.ahnlich and i == 0:
                 _get_similar_images(url, args.ahnlich)
-                print('Total to look for > ', search_keyword)
-            page = download_page(url, mode='str')
-            print(page)
-            items = items + _get_all_items(page)
-
-
-            print ("Image Links = "+str(items))
-            print ("Total Image Links = "+str(len(items)))
-            print ("\n")
-            #Mit die nachsten Codezeilen konnen Sie alle Links in am neues .txt Datei schreiben, denn wird an die selber verzeichnis wie Ihr Code erstellt. Sie konnen die folgende 3 Zeilen auskommentieren, um keine Datei zu schreiben 
-
-            #/////////////////Links.txt zu erstellen/////////////
-            
-            #Dem Datei schreiben
-            _write_txt(str(items), mode='content')
-            #Dem Datei zu schliessen
-            
-        #Bildern speichern
-            k = 0
-            errors = 0
-            success = 1
-            while k < len(items):
-                try:
-                    imgURL = items[k]
-                    if printURL == 'yes':
-                        print("\n" + str(items[k]))
-                    data = download_page(imgURL, mode='bytes')
-                    imgName = word + "-" + str(k+1)
-                    directory = _create_dir(main_dir, dir_name)
-                    _save_image(directory, data=data, imgName=imgName)
-                except HTTPError:
-                    print('HTTP Error in Bild: '+str(k+1))
-                    errors += 1
-                    k += 1
-                    continue
-                except URLError:
-                    print('URL Error in Bild: '+str(k+1))
-                    errors += 1
-                    k += 1
-                    continue
-                print("Bild "+str(k+1)+" gespeichert")
-                success += 1
-                k += 1
-                print(pause, "pauseee")
-                time.sleep(pause)
             i += 1
-            if success < limit:
-                print("Leider konnte alle " + str(limit) + " Bildern nicht heruntergeladen werden, " + str(success) + " ist alles, was wir fur diesen Suchfilter bekommen haben!")
-            return errors
+            items, error_count = _get_all_items(page, directory, i)
+            if args.auszug:
+                zeit = time.strftime("%d-%B-%Y", time.gmtime())
+                logs_path = 'logs/'+zeit+"/"
+                try:
+                    if not os.path.exists(logs_path):
+                        os.makedirs(logs_path)
+                except OSError as error:
+                    print(error)
+                with open(logs_path+word+".json", "a") as js:
+                    js.write(json.dumps(items, indent=4))
+                print('JSONDatei erstellen!')
+            total_errors += error_count
+        t1 = time.time() 
+        total_time = t1 - t0
+        return total_errors, total_time
+
             
     #     /////////////////  Ende des Programm  /////////////////
 
 if args.single:
     _single_image_download()
 else:
-    t0 = time.time()
-    error_count = bulk_download(search_keyword, suffix_keywords, main_dir, limit, pause, printURL)
-    print('Alle Bildern herunterladen\nFehler:'+str(error_count)+"\n")
-    t1 = time.time() 
-    total_time = t1 - t0 
+    total_time, total_errors = bulk_download(search_keyword, suffix_keywords, main_dir, limit, pause, printURL)
+    print('Alle Bildern herunterladen\nFehler:'+str(total_errors)+"\n")
     # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
     print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden\n(ist die Zeit die wir verbracht haben, die Bildlinks zu finden!)")
 
