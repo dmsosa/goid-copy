@@ -69,6 +69,11 @@ $ cd goidcopy && sudo py setup.py install
 | **time** | z | Ermoglicht dir, ein Zeitspanne zu geben, um jeden herunter zu erwarten |
 | **rechte** | r | Erkennen Sie, wer die rechten von jeden Bildern habe! <br> Mogliche Ergegnisse:  labled-for-reuse-with-modifications, labled-for-reuse, labled-for-noncommercial-reuse-with-modification, labled-for-nocommercial-reuse |
 | **grosse** | g | Schaust Du, wie grosse die Bildern sind <br> Mogliche Ergegnisse:  small, medium, large, icon |
+| **lautlos** | lm | Mit diese Funktionalitat, kannst du das Programm ohne Nachrichten laufen! |
+| **auszug** | au | Aktivieren sie dieses Argumente, um ein JSONDatei mit der Datei den Bildern zu erstellen! |
+| **schreibt** | sc | Wenn du dieses Argumente geben, ein .txtdatet automatische erstellt wurde |
+| **pause** | p | Geben Sie die Zeit an, die wir in zwischen jeden Anfrage wir warten sollen! |
+| **timeout** | to | Geben sie die Zeit an, die wir fur jeden einzelnes socketantwort warten sollen |
 
 **Anmerkung** Wenn es gibt kein `url` oder `single` Argument, nur die Keywordsfeld ist obligatorisch. Keine andere Argumente obligatorisch ist.
 

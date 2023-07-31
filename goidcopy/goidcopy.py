@@ -43,6 +43,7 @@ parser.add_argument('-pr', '--print', help="Zeichen Sie die URL von der gegeben 
 parser.add_argument('-sc', '--write', help="Auswahlen sie, ob ein Textdatei zu erstellen oder nicht", default=False, action="store_true")
 parser.add_argument('-m', '--metadata', help="Geben Sie an, ob das Metadatei den Bildern zu gezeigt oder nicht", default=False, action="store_true")
 parser.add_argument('-au', '--auszug', help="Auswahlen Sie an, ob das Metadatei den Bildern zu auszugen oder nicht", default=False, action="store_true")
+parser.add_argument('-lm', '--lautlos', help="Aktivieren dieses Lautlos-Modus, um die Programm ohne Nachrichten zu laufen!", default=False, action="store_true")
 args = parser.parse_args()
 #============= Parameter prufen =============
 
@@ -247,7 +248,7 @@ def _get_next_item(rawPage):
         site = rawPage[site_start+len(queries['site'][0]):site_end]
     img_object = (title[:16], {'link':img_link, 'width':width, 'height':height, 'title':title, 'site':site})
     return img_object, end_content
-def _get_all_items(page, directory, index):
+def _get_all_items(page, directory, index, limit):
     items = []
     count = 0
     success = 0
@@ -263,26 +264,29 @@ def _get_all_items(page, directory, index):
             print('no more links')
             break
         else:
-            count += 1
-        #Alle die Items in dem List "Links" bekannt zu hinzufugen
-        #Timer konnte verwendet werden, um den Anfrage fur das Herunterladen von Bildern zu verlangsamen
             page = page[end_content:]
-            item_object, download_status, download_message = download_image(item_object, directory, count, format)
+            item_object, download_status, download_message = download_image(item_object, directory, count+1, format)
             if download_status == 'Erfolg':
-                success += 1
                 items.append(item_object)
+                if not args.lautlos:
+                    print(download_message)
                 if args.metadata:
                     print("Bilder Metadatei:\n"+str(item_object))
                 if args.write:
                     _write_txt(str(item_object))
-                    print("Textdatei schreibt!")
-                    return items, error_count
+                    if not args.lautlos:
+                        print("Textdatei schreibt!")
+                count += 1
+                success += 1
             else:
                 error_count += 1
+                if not args.lautlos:
+                    print(download_message)
             if args.pause:
                 time.sleep(pause)
     if success < limit:
-        print('Es tut mir leid, aber ' + str(success) + ' ist alles, dass wir fur dieses Seite haben!')
+        if not args.lautlos:
+            print('Es tut mir leid, aber ' + str(success) + ' ist alles, dass wir fur dieses Seite haben!')
     return items, error_count
 
 def _find_search(url):
@@ -291,13 +295,13 @@ def _find_search(url):
     search_term = url[start+2:end]
     return search_term
 def _find_name(url):
-    imgName = url[url.rfind('/'):]
+    imgName = url[url.rfind('/')+1:]
     if '?' in imgName:
         imgName = imgName[:imgName.find('?')]
-    imgName = unquote_plus(imgName)
     #Extension entfernen
     imgName = imgName[:imgName.rfind('.')]
     imgName = imgName.replace(".", "-")
+    imgName = unquote_plus(imgName)
     return imgName
 def _save_image(directory, data, imgName):
     if type(data) is not str and type(data) is not None:
@@ -312,6 +316,7 @@ def _save_image(directory, data, imgName):
                 save_status = 'Es gibt schon ein Bilder!'
                 return target_dir, save_status
         except Exception as err:
+            print(err)
             target_dir = 'no_path'
             save_status = err + " - image not saved"
             return target_dir,  save_status
@@ -412,7 +417,7 @@ def _single_image_download():
 
 #============= Das Hauptprogramm =============
 
-def bulk_download(search_keyword, suffix_keywords, main_dir, limit, pause, printURL):
+def bulk_download(search_keyword, suffix_keywords, main_dir, limit):
     t0 = time.time()
     total_errors = 0
     if args.url:
@@ -425,12 +430,13 @@ def bulk_download(search_keyword, suffix_keywords, main_dir, limit, pause, print
     for suffix in suffix_keywords:
         i = 0 
         while i < len(search_keyword):
-            rootword = search_keyword[i]
+            rootword = search_keyword[i].strip()
             word = rootword + " " + suffix
             iteration = "\nSuchen nu.:" + str(i+1) + " / / == > " + word
-            print(iteration+"\n"+"Evaluating...")
+            if not args.lautlos:
+                print(iteration+"\n"+"Auswertend...")
             dir_name = _set_name(word)
-            directory = _create_dir(main_dir, rootword, dir_name)
+            directory = _create_dir(main_dir, rootword, dir_name).strip()
             if args.url is None or i > 0:
                 url = _url_bauen(quote(word))
             page = download_page(url)
@@ -438,22 +444,25 @@ def bulk_download(search_keyword, suffix_keywords, main_dir, limit, pause, print
             if args.ahnlich and i == 0:
                 _get_similar_images(url, args.ahnlich)
             i += 1
-            items, error_count = _get_all_items(page, directory, i)
+            items, error_count = _get_all_items(page, directory, i+1, limit)
             if args.auszug:
-                zeit = time.strftime("%d-%B-%Y", time.gmtime())
-                logs_path = 'logs/'+zeit+"/"
-                try:
-                    if not os.path.exists(logs_path):
-                        os.makedirs(logs_path)
-                except OSError as error:
-                    print(error)
-                with open(logs_path+word+".json", "a") as js:
-                    js.write(json.dumps(items, indent=4))
-                print('JSONDatei erstellen!')
+                if (len(items) > 0):
+                    zeit = time.strftime("%d-%B-%Y", time.gmtime())
+                    logs_path = 'logs/'+zeit+"/"
+                    try:
+                        if not os.path.exists(logs_path):
+                            os.makedirs(logs_path)
+                    except OSError as error:
+                        print(error)
+                    with open(logs_path+word+".json", "a") as js:
+                        js.write(json.dumps(items, indent=4))
+                    if not args.lautlos:
+                        print('JSONDatei erstellen!')
+                else: print("Leereres Datei, wir kann keine JSON schreiben!")
             total_errors += error_count
-        t1 = time.time() 
-        total_time = t1 - t0
-        return total_errors, total_time
+    t1 = time.time() 
+    total_time = t1 - t0
+    return total_time, total_errors
 
             
     #     /////////////////  Ende des Programm  /////////////////
@@ -461,7 +470,7 @@ def bulk_download(search_keyword, suffix_keywords, main_dir, limit, pause, print
 if args.single:
     _single_image_download()
 else:
-    total_time, total_errors = bulk_download(search_keyword, suffix_keywords, main_dir, limit, pause, printURL)
+    total_time, total_errors = bulk_download(search_keyword, suffix_keywords, main_dir, limit)
     print('Alle Bildern herunterladen\nFehler:'+str(total_errors)+"\n")
     # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
     print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden\n(ist die Zeit die wir verbracht haben, die Bildlinks zu finden!)")

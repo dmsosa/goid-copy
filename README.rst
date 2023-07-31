@@ -106,8 +106,19 @@ Arguments
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 | help             | h           | show the help message regarding the usage of the above arguments                                                              |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
+|lautlos           | lm          | Mit diese Funktionalitat, kannst du das Programm ohne Nachrichten laufen!                                                     |
++------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
+| auszug           | au          | Aktivieren sie dieses Argumente, um ein JSONDatei mit der Datei den Bildern zu erstellen!                                     |
++------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
+|schreibt          | sc          | Wenn du dieses Argumente geben, ein .txtdatet automatische erstellt wurde                                                     |
++------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
+|pause             | p           | Geben Sie die Zeit an, die wir in zwischen jeden Anfrage wir warten sollen!                                                   |
++------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
+|timeout           | to          | Geben sie die Zeit an, die wir fur jeden einzelnes socketantwort warten sollen                                                |
++------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 
 **Note:** If ``single_image`` or ``url`` parameter is not present, then keywords is a mandatory parameter. No other parameters are mandatory.
+
 
 Examples
 --------
@@ -179,7 +190,6 @@ Examples
 (either the one you provided or in 'downloads') in the same folder you are in.
 
 --------------
-
 SSL Errors
 ----------
 
@@ -187,6 +197,26 @@ If you do see SSL errors on Mac for Python 3,
 please go to Finder —> Applications —> Python 3 —> Click on the ‘Install Certificates.command’
 and run the file.
 
+--------------
+Installing library errors
+----------
+ **## Permission denied while installing library **
+On MAC and Linux, when you get permission denied when installing the library using pip, try doing a user install.
+::
+    $ pip install google_images_download --user
+
+You can also run pip install as a superuser with ``sudo pip install google_images_download`` but it is not generally a good idea because it can cause issues with your system-level packages.
+
+--------------
+Structure
+---------
+
+Below diagram represents the code logic.
+
+.. figure:: /img/flow-chart.png
+    :alt:
+
+--------------
 Contribute
 ----------
 
@@ -195,6 +225,7 @@ If you would like to make a change, open a pull request.
 For issues and discussion visit the
 `Issue Tracker <https://github.com/hardikvasa/google-images-download/issues>`__
 
+--------------
 Disclaimer
 ----------
 
