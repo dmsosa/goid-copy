@@ -44,6 +44,8 @@ parser.add_argument('-sc', '--write', help="Auswahlen sie, ob ein Textdatei zu e
 parser.add_argument('-m', '--metadata', help="Geben Sie an, ob das Metadatei den Bildern zu gezeigt oder nicht", default=False, action="store_true")
 parser.add_argument('-au', '--auszug', help="Auswahlen Sie an, ob das Metadatei den Bildern zu auszugen oder nicht", default=False, action="store_true")
 parser.add_argument('-lm', '--lautlos', help="Aktivieren dieses Lautlos-Modus, um die Programm ohne Nachrichten zu laufen!", default=False, action="store_true")
+parser.add_argument('-pre', '--prefix', help="Geben Sie ein Prafix an, dass an der Beginnen von jedem Suchen hinzugefugt werde!", default=False, action="store_true")
+parser.add_argument('-la', '--language', help="Auswahlen in welche Sprache mochtest Du die Suchergebnisse erhalten!", choices=['Arabic','Chinese (Simplified)','Chinese (Traditional)','Czech','Danish','Dutch','English','Estonian','Finnish','French','German','Greek','Hebrew','Hungarian','Icelandic','Italian','Japanese','Korean','Latvian','Lithuanian','Norwegian','Portuguese','Polish','Romanian','Russian','Spanish','Swedish','Turkish'])
 args = parser.parse_args()
 #============= Parameter prufen =============
 
@@ -58,6 +60,13 @@ else:
 
 if args.keywords:
     search_keyword = [str(i) for i in args.keywords.split(',')]
+else:
+    search_keyword = []
+
+if args.prefix:
+    prefix = str(args.prefix).split(',')
+    for i in range(len(prefix)):
+        prefix[i] = prefix[i].strip()
 
 if args.limit:
     limit = int(args.limit)
@@ -151,11 +160,27 @@ def download_image(object, dir, count, format=""):
         download_status = 'Erfolg'
         download_message = 'Die Bilder '+imgName+' erfolglich gespeichert ist /// 100% herunterladen'
         return object, download_status, download_message
-    except Exception as err:
-        print(err)
+    except UnicodeDecodeError as err:
         download_status = 'Versagen'
-        download_message = 'Es tut mir leid aber die Bilder '+imgName+' kann nicht herunterladen werden'
+        download_message = err + " in ein Bild, die nachsten versuchen..."
         return object, download_status, download_message
+    except HTTPError as err:
+        download_status = 'Versagen'
+        download_message = err + " in ein Bild, die nachsten versuchen..."
+        return object, download_status, download_message
+    except URLError as err:
+        download_status = 'Versagen'
+        download_message = err + " in ein Bild, die nachsten versuchen..."
+        return object, download_status, download_message
+    except ssl.CertificateError as err:
+        download_status = 'Versagen'
+        download_message = err + " in ein Bild, die nachsten versuchen..."
+        return object, download_status, download_message
+    except IOError as err:
+        download_status = 'Versagen'
+        download_message = err + " in ein Bild, die nachsten versuchen..."
+        return object, download_status, download_message
+
         
 
 def _get_similar_images(url, n_Times):
@@ -329,8 +354,11 @@ def _url_bauen(search):
     bauen = "&tbs="
     root = 'https://www.google.com/search?q='
     base = '&tbm=isch'
-    closer = '&hl=pt&sa=X&ved=0CAIQpwVqFwoTCKDZgKG4qYADFQAAAAAdAAAAABAD&biw=1263&bih=648'
-
+    if args.language:
+        param = {"Arabic":"ar","Chinese (Simplified)":"zh-CN","Chinese (Traditional)":"zh-TW","Czech":"cs","Danish":"da","Dutch":"nl","English":"en","Estonian":"et","Finnish":"fi","French":"fr","German":"de","Greek":"el","Hebrew":"iw ","Hungarian":"hu","Icelandic":"is","Italian":"it","Japanese":"ja","Korean":"ko","Latvian":"lv","Lithuanian":"lt","Norwegian":"no","Portuguese":"pt","Polish":"pl","Romanian":"ro","Russian":"ru","Spanish":"es","Swedish":"sv","Turkish":"tr"}
+        language = '&hl=' + param[args.language]
+    else: language = '&hl=pt'
+    closer = language+'&sa=X&ved=0CAIQpwVqFwoTCKDZgKG4qYADFQAAAAAdAAAAABAD&biw=1263&bih=648'
     params = {
         'color':[args.color, {'red':'ic:specific,isc:red', 'orange':'ic:specific,isc:orange', 'yellow':'ic:specific,isc:yellow', 'green':'ic:specific,isc:green', 'teal':'ic:specific,isc:teel', 'blue':'ic:specific,isc:blue', 'purple':'ic:specific,isc:purple', 'pink':'ic:specific,isc:pink', 'white':'ic:specific,isc:white', 'gray':'ic:specific,isc:gray', 'black':'ic:specific,isc:black', 'brown':'ic:specific,isc:brown'}],
         'type':[args.type, {'face':'itp:face','photo':'itp:photo','clip-art':'itp:clip-art','lineart':'itp:lineart','animated':'itp:animated'}],
@@ -340,7 +368,7 @@ def _url_bauen(search):
         'time':[args.time, {'past-24-hours':'qdr:d','past-7-days':'qdr:w', 'past-1-year':'qdr:y'}],
         'color-type':[args.colortype, {'full-color':'ic:color','black-and-white':'ic:gray', 'transparent':'ic:trans'}],
         'aspect_ratio':[args.aspekt,{'tall':'iar:t','square':'iar:s','wide':'iar:w','panoramic':'iar:xw'}]
-          }
+        }
     
     c = 0
     for i in params:
@@ -421,12 +449,15 @@ def bulk_download(search_keyword, suffix_keywords, main_dir, limit):
     t0 = time.time()
     total_errors = 0
     if args.url:
-        search_keyword = []
         search = _find_search(args.url)
         search_keyword.append(search)
         url = args.url
         if args.ahnlich:
             _get_similar_images(url, args.ahnlich)
+    if args.prefix:
+        prefixed_words = [str(j) + " " + str(i) for i in search_keyword for j in prefix]
+        for i in prefixed_words:
+            search_keyword.append(i)
     for suffix in suffix_keywords:
         i = 0 
         while i < len(search_keyword):
