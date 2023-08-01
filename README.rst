@@ -1,45 +1,46 @@
 Google Images Download
-======================
+######################
 
 Python Script for 'searching' and 'downloading' hundreds of Google images to the local hard disk!
 
 Summary
--------
+=======
 
 This is a command line python program to search keywords/key-phrases on Google Images
 and then also optionally download one or more images to your computer.
 This is a small program which is ready-to-run, but still under development.
 Many more features will be added to it going forward.
 
-Compatability
--------------
+Kompatibilitat
+==============
 
 This program is compatible with both the versions of python (2.x and 3.x).
 It is a download-and-run program with no changes to the file.
 You will just have to specify parameters through the command line.
 
 Installation
-------------
+============
 
 **Using pip:**
 
-::
+.. code-block:: bash
 
     $ pip install google_images_download
 
 **Manually:**
 
-::
+.. code-block:: bash
 
     $ git clone https://github.com/hardikvasa/google-images-download.git
     $ cd google-images-download && sudo python setup.py install
 
-Usage
------
+Verwegung
+=========
 
-::
+.. code-block:: bash
 
     $ googleimagesdownload [Arguments...]
+ 
 
 Arguments
 ~~~~~~~~~
@@ -57,8 +58,12 @@ Arguments
 | suffix_keywords  | sk          | Denotes additional words added after main keyword while making the search query.                                              |
 |                  |             | Useful when you have multiple suffix keywords for one keyword.                                                                |
 |                  |             | The final search query would be: <keyword> <suffix keyword>                                                                   |
++------------------+-------------+-----------------------------------------------+
+| prefix           | pre         | Prafixen, der an der beginnen jeden Wortes hinzugefugt wird, um mehrere Ergebnisse zu erhalten!                              |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 | limit            | l           | Denotes number of images that you want to download.                                                                           |
++------------------+-------------+-----------------------------------------------+
+| language         | la          | Auswahlen Sie in welches Sprache, die Ergebnisse erhalten mochte!                                                            |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 | format           | f           | Denotes the format/extension that you want to download.                                                                       |
 |                  |             | `Possible values: jpg, gif, png, bmp, svg, webp, ico`                                                                         |
@@ -78,7 +83,7 @@ Arguments
 |                  |             | * labled-for-nocommercial-reuse`                                                                                              |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 | size             | s           | Denotes the relative size of the image to be downloaded.                                                                      |
-|                  |             | `Possible values: large, medium, icon`                                                                                        |
+|                  |             | `Possible values: large, medium, icon, >400*300, >640*480, >800*600, >1024*768, >2MP, >4MP, >6MP, >8MP, >10MP,`               |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 | aspect_ratio     | a           | Denotes the aspect ration of images to download.                                                                              |
 |                  |             | `Possible values: tall, square, wide, panoramic`                                                                              |
@@ -106,15 +111,17 @@ Arguments
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 | help             | h           | show the help message regarding the usage of the above arguments                                                              |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
-|lautlos           | lm          | Mit diese Funktionalitat, kannst du das Programm ohne Nachrichten laufen!                                                     |
+| lautlos           | lm          | Mit diese Funktionalitat, kannst du das Programm ohne Nachrichten laufen!                                                     |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 | auszug           | au          | Aktivieren sie dieses Argumente, um ein JSONDatei mit der Datei den Bildern zu erstellen!                                     |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
-|schreibt          | sc          | Wenn du dieses Argumente geben, ein .txtdatet automatische erstellt wurde                                                     |
+| schreibt         | sc          | Wenn du dieses Argumente geben, ein .txtdatet automatische erstellt wurde                                                     |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
-|pause             | p           | Geben Sie die Zeit an, die wir in zwischen jeden Anfrage wir warten sollen!                                                   |
+| pause            | p           | Geben Sie die Zeit an, die wir in zwischen jeden Anfrage wir warten sollen!                                                   |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
-|timeout           | to          | Geben sie die Zeit an, die wir fur jeden einzelnes socketantwort warten sollen                                                |
+| timeout          | to          | Geben sie die Zeit an, die wir fur jeden einzelnes socketantwort warten sollen                                                |
++------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
+| extract          | ek          | Auszugen Sie, der Schlusselworten aus einer Datei oder ahnliche!                                                            |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 
 **Note:** If ``single_image`` or ``url`` parameter is not present, then keywords is a mandatory parameter. No other parameters are mandatory.

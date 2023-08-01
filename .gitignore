@@ -1,6 +1,5 @@
 /venv
-links.txt
 duplicate.py
 /goidcopy/downloads
-/goidcopy/logs
+/goidcopy/logs/
 /goidcopy/*.txt
