@@ -21,7 +21,7 @@ from selenium.webdriver.common.by import By
 sys.stdout.reconfigure(encoding='utf-8')
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--keywords', help='Delimited keywords for searching images', required=False)
-parser.add_argument('-sk', '--suffix', help='suffix keywords for searching more related images', required=False)
+parser.add_argument('-sk', '--suffix', help='suffix keywords for searching more related images, kannst du auch Zufallprinzip auswahlen, um mit einigen Vorschalgen, die wir fur sie haben nachzusehen!', required=False)
 parser.add_argument('-l', '--limit', help='Delimited list input', required=False)
 parser.add_argument('-c', '--color', help='Filtering by color', required=False, choices=[
     'red','yellow','blue','orange','violet','green','brown','white','black','gray','pink','teel','purple', 'brown'])
@@ -44,8 +44,8 @@ parser.add_argument('-sc', '--write', help="Auswahlen sie, ob ein Textdatei zu e
 parser.add_argument('-m', '--metadata', help="Geben Sie an, ob das Metadatei den Bildern zu gezeigt oder nicht", default=False, action="store_true")
 parser.add_argument('-au', '--auszug', help="Auswahlen Sie an, ob das Metadatei den Bildern zu auszugen oder nicht", default=False, action="store_true")
 parser.add_argument('-lm', '--lautlos', help="Aktivieren dieses Lautlos-Modus, um die Programm ohne Nachrichten zu laufen!", default=False, action="store_true")
-parser.add_argument('-pre', '--prefix', help="Geben Sie ein Prafix an, dass an der Beginnen von jedem Suchen hinzugefugt werde!", default=False, action="store_true")
-parser.add_argument('-la', '--language', help="Auswahlen in welche Sprache mochtest Du die Suchergebnisse erhalten!", choices=['Arabic','Chinese (Simplified)','Chinese (Traditional)','Czech','Danish','Dutch','English','Estonian','Finnish','French','German','Greek','Hebrew','Hungarian','Icelandic','Italian','Japanese','Korean','Latvian','Lithuanian','Norwegian','Portuguese','Polish','Romanian','Russian','Spanish','Swedish','Turkish'])
+parser.add_argument('-pre', '--prefix', help="Geben Sie ein Prafix an, dass an der Beginnen von jedem Suchen hinzugefugt werden!, kannst du es auch zufallig auswahlen!", type=str)
+parser.add_argument('-la', '--language', help="Auswahlen in welche Sprache mochtest Du die Suchergebnisse erhalten!", choices=['Arabic','Chinese (Simplified)','Chinese (Traditional)','Czech','Danish','Dutch','English','Estonian','Finnish','French','German','Greek','Hebrew','Hungarian','Icelandic','Italian','Japanese','Korean','Latvian','Lithuanian','Norwegian','Portuguese','Polish','Romanian','Russian','Spanish','Swedish','Turkish'], type=str)
 args = parser.parse_args()
 #============= Parameter prufen =============
 
@@ -53,8 +53,11 @@ if (args.keywords is None) and (args.url is None) and (args.single is None):
     parser.error('Keywordsargument obligatorisch ist!')
 
 if args.suffix:
-    suffix_keywords = [str(i).strip() for i in args.suffix.split(",")]
-    suffix_keywords.insert(0, '')
+    if args.suffix == 'random':
+        suffix_keywords = ['course', 'college', 'school', 'for beginners', 'professional', 'curiosities', 'friendly', 'to learn', 'from 0 to hero', 'as it is', 'cool photos']
+    else:
+        suffix_keywords = [str(i).strip() for i in args.suffix.split(",")]
+        suffix_keywords.insert(0, '')
 else:
     suffix_keywords = ['']
 
@@ -64,9 +67,12 @@ else:
     search_keyword = []
 
 if args.prefix:
-    prefix = str(args.prefix).split(',')
-    for i in range(len(prefix)):
-        prefix[i] = prefix[i].strip()
+    if args.prefix == 'random':
+        prefix = ['Real', 'Normal', 'Big', 'Small', 'Little', 'Pro', 'Pre', 'Post', 'Basic', 'Intermediate', 'Advance', 'How to']
+    else:
+        prefix = str(args.prefix).split(',')
+        for i in range(len(prefix)):
+            prefix[i] = prefix[i].strip()
 
 if args.limit:
     limit = int(args.limit)
@@ -467,7 +473,7 @@ def bulk_download(search_keyword, suffix_keywords, main_dir, limit):
             if not args.lautlos:
                 print(iteration+"\n"+"Auswertend...")
             dir_name = _set_name(word)
-            directory = _create_dir(main_dir, rootword, dir_name).strip()
+            directory = _create_dir(main_dir, dir_name).strip()
             if args.url is None or i > 0:
                 url = _url_bauen(quote(word))
             page = download_page(url)
