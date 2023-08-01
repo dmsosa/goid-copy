@@ -21,6 +21,7 @@ from selenium.webdriver.common.by import By
 sys.stdout.reconfigure(encoding='utf-8')
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--keywords', help='Delimited keywords for searching images', required=False)
+parser.add_argument('-ek', '--extract', help='Worten, aus ein Datei oder Ahnlich erhalten!', required=False)
 parser.add_argument('-sk', '--suffix', help='suffix keywords for searching more related images, kannst du auch Zufallprinzip auswahlen, um mit einigen Vorschalgen, die wir fur sie haben nachzusehen!', required=False)
 parser.add_argument('-l', '--limit', help='Delimited list input', required=False)
 parser.add_argument('-c', '--color', help='Filtering by color', required=False, choices=[
@@ -30,7 +31,7 @@ parser.add_argument('-u', '--url', help='Die Bildern nach Benutzerurl herunterla
 parser.add_argument('-o', '--output', help='Entmoglich dir, den Name von Ausgeben zu auswahlen', required=False, type=str)
 parser.add_argument('-s', '--single', help='Macht es moglich, ein einzelnes Bilder zu herunterladen', required=False, type=str)
 parser.add_argument('-p', '--pause', help='Bezeicht die Zeit, dass wir warten wird zwischen Bildern', required=False, type=int)
-parser.add_argument('-g', '--grosse', help='Sagt Sie, wie Grosse den Bildern sollen sind', required=False, choices=['large','medium','icon'])
+parser.add_argument('-g', '--grosse', help='Sagt Sie, wie Grosse den Bildern sollen sind', required=False, choices=['large','medium','icon','>400*300','>640*480','>800*600','>1024*768','>2MP','>4MP','>6MP','>8MP','>10MP','>12MP','>15MP','>20MP','>40MP','>70MP'])
 parser.add_argument('-t', '--type', help='Bezeicht die Typ oder Art von Bildern dass wir finden wird', required=False, choices=['face','photo','clip-art','lineart','animated'])
 parser.add_argument('-z', '--time', help='Bezeicht die Zeit, in dass den Bildern hochgeladen wurden', required=False, choices=['past-24-hours','past-7-days','past-1-month','past-1-year'])
 parser.add_argument('-r', '--rechte', help='Wahlen Sie der Benutzbedingungen dieses Bildern', required=False, type=str, choices=['labled-for-reuse-with-modifications','labled-for-reuse','labled-for-noncommercial-reuse-with-modification','labled-for-nocommercial-reuse'])
@@ -46,10 +47,11 @@ parser.add_argument('-au', '--auszug', help="Auswahlen Sie an, ob das Metadatei 
 parser.add_argument('-lm', '--lautlos', help="Aktivieren dieses Lautlos-Modus, um die Programm ohne Nachrichten zu laufen!", default=False, action="store_true")
 parser.add_argument('-pre', '--prefix', help="Geben Sie ein Prafix an, dass an der Beginnen von jedem Suchen hinzugefugt werden!, kannst du es auch zufallig auswahlen!", type=str)
 parser.add_argument('-la', '--language', help="Auswahlen in welche Sprache mochtest Du die Suchergebnisse erhalten!", choices=['Arabic','Chinese (Simplified)','Chinese (Traditional)','Czech','Danish','Dutch','English','Estonian','Finnish','French','German','Greek','Hebrew','Hungarian','Icelandic','Italian','Japanese','Korean','Latvian','Lithuanian','Norwegian','Portuguese','Polish','Romanian','Russian','Spanish','Swedish','Turkish'], type=str)
+parser.add_argument('-zb', '--timerange', help="Geben Sie die Zeitbereich an, inzwischen unseres Bilder hochgeladen wurden, format {'time_min':'MM/DD/YYYY','time_min':'MM/DD/YYYY'}'")
 args = parser.parse_args()
 #============= Parameter prufen =============
 
-if (args.keywords is None) and (args.url is None) and (args.single is None):
+if (args.keywords is None) and (args.url is None) and (args.single is None) and (args.extract is None):
     parser.error('Keywordsargument obligatorisch ist!')
 
 if args.suffix:
@@ -64,7 +66,7 @@ else:
 if args.keywords:
     search_keyword = [str(i) for i in args.keywords.split(',')]
 else:
-    search_keyword = []
+    search_keyword = ['']
 
 if args.prefix:
     if args.prefix == 'random':
@@ -73,7 +75,24 @@ if args.prefix:
         prefix = str(args.prefix).split(',')
         for i in range(len(prefix)):
             prefix[i] = prefix[i].strip()
-
+if args.extract:
+    fname = str(args.extract)
+    with open(fname, 'r', encoding='utf-8') as fhand:
+        if '.csv' in fname:
+            for line in fhand:
+                if line in ['\n', '\r\n']:
+                    pass
+                else:
+                    search_keyword.append(line.replace('\n', '').replace('\r', ''))
+        elif '.txt' in fname:
+            for line in fhand:
+                if line in ['\n', '\r\n']:
+                    pass
+                else:
+                    search_keyword.append(line.replace('\n', '').replace('\r', ''))
+        else:
+            print('Ungultiges Datei, bitte Geben Sie ein TXT oder CSV Art von Datei ein!\nAusgangen...')
+            sys.exit()
 if args.limit:
     limit = int(args.limit)
     if int(args.limit) >= 100:
@@ -109,6 +128,14 @@ if args.timeout:
     except TypeError:
         print("Die Zeituberschreitung ein Gleitkommazahlen sind muss!")
 else: timeout = 15
+
+if args.time and args.timerange:
+    print("Fehler, Du kannst nur von Zeit oder Zeitbereich benutz, Du kannst nicht gleichzeitig sie benutz!")
+
+if args.timerange:
+    ranges = str(args.timerange).split()
+    timerange = {'time_min':ranges[0], 'time_max':ranges[1]}
+    timerange = str(timerange).replace("'","\"")
 ##============= Globalen Variablen initialisieren =============
 
 headers = {
@@ -369,7 +396,7 @@ def _url_bauen(search):
         'color':[args.color, {'red':'ic:specific,isc:red', 'orange':'ic:specific,isc:orange', 'yellow':'ic:specific,isc:yellow', 'green':'ic:specific,isc:green', 'teal':'ic:specific,isc:teel', 'blue':'ic:specific,isc:blue', 'purple':'ic:specific,isc:purple', 'pink':'ic:specific,isc:pink', 'white':'ic:specific,isc:white', 'gray':'ic:specific,isc:gray', 'black':'ic:specific,isc:black', 'brown':'ic:specific,isc:brown'}],
         'type':[args.type, {'face':'itp:face','photo':'itp:photo','clip-art':'itp:clip-art','lineart':'itp:lineart','animated':'itp:animated'}],
         'format':[args.format, {'jpg':'ift:jpg','gif':'ift:gif','png':'ift:png','bmp':'ift:bmp','svg':'ift:svg','webp':'webp','ico':'ift:ico'}],
-        'grosse':[args.grosse, {'large':'isz:l', 'medium':'isz:m', 'small':'isz:s', 'icon':'isz:i'}], 
+        'grosse':[args.grosse, {'large':'isz:l', 'medium':'isz:m', 'small':'isz:s', 'icon':'isz:i','>400*300':'isz:lt,islt:qsvga','>640*480':'isz:lt,islt:vga','>800*600':'isz:lt,islt:svga','>1024*768':'visz:lt,islt:xga','>2MP':'isz:lt,islt:2mp','>4MP':'isz:lt,islt:4mp','>6MP':'isz:lt,islt:6mp','>8MP':'isz:lt,islt:8mp','>10MP':'isz:lt,islt:10mp','>12MP':'isz:lt,islt:12mp','>15MP':'isz:lt,islt:15mp','>20MP':'isz:lt,islt:20mp','>40MP':'isz:lt,islt:40mp','>70MP':'isz:lt,islt:70mp'}], 
         'rechte':[args.rechte, {'labled-for-reuse-with-modifications':'sur:fmc', 'labled-for-reuse':'sur:fc','labled-for-noncommercial-reuse-with-modification':'sur:fm','labled-for-nocommercial-reuse':'sur:f'}],
         'time':[args.time, {'past-24-hours':'qdr:d','past-7-days':'qdr:w', 'past-1-year':'qdr:y'}],
         'color-type':[args.colortype, {'full-color':'ic:color','black-and-white':'ic:gray', 'transparent':'ic:trans'}],
@@ -386,10 +413,15 @@ def _url_bauen(search):
                 c += 1
             else:
                 bauen += "%2C"+output_param
+    if args.timerange:
+        js = json.loads(timerange)
+        zeitbereich = '&cdr:1,cd_min:' + js['time_min'] + ',cd_max:' + js['time_max']
+    else: zeitbereich = ''
+
     if args.webseite:
-        url = root+search+",site:"+args.webseite+base+bauen+closer
+        url = root+search+",site:"+args.webseite+base+bauen+closer+zeitbereich
     else:
-        url = root+search+base+bauen+closer
+        url = root+search+base+bauen+closer+zeitbereich
     return url
 def _write_txt(data, mode='content'):
     if mode == 'item':
