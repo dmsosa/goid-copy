@@ -11,6 +11,10 @@ and then also optionally download one or more images to your computer.
 This is a small program which is ready-to-run, but still under development.
 Many more features will be added to it going forward.
 
+Wenn du mehrere als 100 hundert Bildern herunterladen mochtest, solltest du die ``Selenium`` Modul zusammen mit ``geckodriver`` installieren.
+
+**(Tatsatlich dieses Programm wirkst ohne kein geckodriver)**
+
 Kompatibilitat
 ==============
 
@@ -61,7 +65,7 @@ Arguments
 +------------------+-------------+-----------------------------------------------+
 | prefix           | pre         | Prafixen, der an der beginnen jeden Wortes hinzugefugt wird, um mehrere Ergebnisse zu erhalten!                              |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
-| limit            | l           | Denotes number of images that you want to download.                                                                           |
+| limit            | l           | Denotes number of images that you want to download. Das Programm wird es versuch, um alle Mogliche Bildern in einem Googleseite herunterladen, wenn es kein angegeben wert hast, die limitzahl 100 als Standartwert geben wird.                                                              |
 +------------------+-------------+-----------------------------------------------+
 | language         | la          | Auswahlen Sie in welches Sprache, die Ergebnisse erhalten mochte!                                                            |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
