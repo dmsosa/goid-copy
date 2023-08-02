@@ -95,8 +95,6 @@ if args.extract:
             sys.exit()
 if args.limit:
     limit = int(args.limit)
-    if int(args.limit) >= 100:
-        limit = 100
 else:
     limit = 100
 
@@ -145,6 +143,36 @@ ctx = ssl._create_unverified_context()
 
 
 #============= Funktionen erstellen =================
+def download_over_limit(url):
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.chrome.service import Service
+    from webdriver_manager.chrome import ChromeDriverManager
+
+    try:
+        opt = Options()
+        opt.add_argument('--headless=new')
+        serv = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=serv, options=opt)
+        driver.get(url)
+        #Kefken azekptieren
+        accept = driver.find_element(By.CSS_SELECTOR, 'button[jsname="b3VHJd"]')
+        accept.click()
+        for i in range(10):
+            driver.execute_script("window.scrollBy(0, 10000)")
+            time.sleep(0.5)
+            i += 1
+        try:
+            show_more = driver.find_element(By.CSS_SELECTOR, "input[jsaction='Pmjnye']")
+            show_more.click()
+        except: 
+            print('Keine mehrere Bildern hier!')
+        rawPage = driver.page_source
+        return rawPage
+    except Exception as err:
+        print(err)
+        return 'Seite Nicht Gefunden'
 
 def download_page(url, mode=''):
         version = (3,0)
@@ -270,44 +298,59 @@ def _get_size(file_path):
                 return "3%.1f %s"%(size, x)
             size /= 1024.0
 
-def _get_next_item(rawPage):
+def _get_next_item(rawPage, retrieved_links):
     #Dieses Abfragen sind die Ziechenfolgen, nach denen wir suchen, um die Datei aus unseren Bildern zu extrahieren
-    queries = {'link':['<img data-src=', '" data-ils'],
+    queries = {'link':[('<img data-src=', 'src="'), ('" data-ils', '"')],
                'title':['<h3 class="bytUYc">', '</h3>'],
                'height':['data-oh="','"'],
                'width':['data-ow="','"'],
                'site':['<div class="LAA3yd">','</div>']}
-    #Dateiinhalt finden
-    start_line = rawPage.find(queries['link'][0])
-    end_content = rawPage.find('</h3>', start_line)
-    if start_line == -1:
-        end_quote = 0
-        img_object = "no_links"
-        return img_object, end_quote
-    else:
-        #Link finden
-        end_link = rawPage.find(queries['link'][1],start_line+len(queries['link'][0]))
-        img_link = str(rawPage[start_line+len(queries['link'][0])+1:end_link])
-        #Titel finden
-        title_start = rawPage.find(queries['title'][0], start_line)
-        title_end = rawPage.find("</h3>", title_start+len(queries['title'][0]))
-        title = rawPage[title_start+len(queries['title'][0]):title_end]
-        #Hoch finden
-        height_start = rawPage.find(queries['height'][0], start_line)
-        height_end = rawPage.find(queries['height'][1], height_start+len(queries['height'][0]))
-        height = rawPage [height_start+len(queries['height'][0]):height_end]
-        #Breite finden
-        width_start = rawPage.find(queries['width'][0], start_line)
-        width_end = rawPage.find(queries['width'][1], width_start+len(queries['height'][0]))
-        width = rawPage [width_start+len(queries['width'][0]):width_end]
-        #Seite finden
-        site_start = rawPage.find(queries['site'][0], start_line)
-        site_end = rawPage.find(queries['site'][1], site_start)
-        site = rawPage[site_start+len(queries['site'][0]):site_end]
+    img_link = None
+    #Link finden
+    while True:
+        if img_link in retrieved_links:
+            rawPage = rawPage[end_content:]
+        start_line = rawPage.find('class="bRMDJf islir"')
+        end_content = rawPage.find('</h3>', start_line)
+        if start_line == -1:
+            end_quote = 0
+            img_object = "no_links"
+            return img_object, end_quote, retrieved_links
+        if limit <= 100:
+            link_start = rawPage.find(queries['link'][0][0], start_line)
+            link_end = rawPage.find(queries['link'][1][0],link_start+len(queries['link'][0][0]))
+            img_link = str(rawPage[link_start+len(queries['link'][0][0])+1:link_end])
+            if img_link not in retrieved_links:
+                break
+        else:
+            link_start = rawPage.find(queries['link'][0][1], start_line)
+            link_end = rawPage.find(queries['link'][1][1],link_start+len(queries['link'][0][1]))
+            img_link = str(rawPage[link_start+len(queries['link'][0][1]):link_end])
+            if img_link not in retrieved_links:
+                break
+    #Titel finden
+    title_start = rawPage.find(queries['title'][0], start_line)
+    title_end = rawPage.find("</h3>", title_start+len(queries['title'][0]))
+    title = rawPage[title_start+len(queries['title'][0]):title_end]
+    #Hoch finden
+    height_start = rawPage.find(queries['height'][0], start_line)
+    height_end = rawPage.find(queries['height'][1], height_start+len(queries['height'][0]))
+    height = rawPage [height_start+len(queries['height'][0]):height_end]
+    #Breite finden
+    width_start = rawPage.find(queries['width'][0], start_line)
+    width_end = rawPage.find(queries['width'][1], width_start+len(queries['height'][0]))
+    width = rawPage [width_start+len(queries['width'][0]):width_end]
+    #Seite finden
+    site_start = rawPage.find(queries['site'][0], start_line)
+    site_end = rawPage.find(queries['site'][1], site_start)
+    site = rawPage[site_start+len(queries['site'][0]):site_end]
+    #Objekt erstellen
     img_object = (title[:16], {'link':img_link, 'width':width, 'height':height, 'title':title, 'site':site})
-    return img_object, end_content
+    retrieved_links.append(img_object[1]['link'])
+    return img_object, end_content, retrieved_links
 def _get_all_items(page, directory, index, limit):
     items = []
+    retrieved = []
     count = 0
     success = 0
     error_count = 0
@@ -317,7 +360,7 @@ def _get_all_items(page, directory, index, limit):
         _write_txt(tuple, mode='item')
     format = (args.format if args.format else '')
     while count < limit:
-        item_object, end_content = _get_next_item(page)
+        item_object, end_content, retrieved = _get_next_item(page, retrieved)
         if item_object == 'no_links':
             print('no more links')
             break
@@ -508,7 +551,10 @@ def bulk_download(search_keyword, suffix_keywords, main_dir, limit):
             directory = _create_dir(main_dir, dir_name).strip()
             if args.url is None or i > 0:
                 url = _url_bauen(quote(word))
-            page = download_page(url)
+            if limit <= 100:
+                page = download_page(url)
+            else: 
+                page = download_over_limit(url)
             #Die Sucheliste zu vermehren
             if args.ahnlich and i == 0:
                 _get_similar_images(url, args.ahnlich)
