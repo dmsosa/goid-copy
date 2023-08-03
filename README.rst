@@ -127,6 +127,14 @@ Arguments
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 | extract          | ek          | Auszugen Sie, der Schlusselworten aus einer Datei oder ahnliche!                                                            |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
+| metadatei        | mt          | Auswahlen Sie, ob die Metadatei von der Bildern an die Fernster zu schauen                                                  |
++------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
+| extract_datei    | ed          | Aktivieren Sie diese Funktion, um die Schlusselworten herauszeugen                                                          |
++------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
+| sprache          | la          | Jetzt hast du die Auswahl, um in welches Sprache die Ergebnisse erhalten!                                                   |
+|                  |             |                                             |
+|                  |             | `Moglichen Werten: Arabic, Chinese (Vereinfacht, und viel mehrere Sprachen)`                                                |
++------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 
 **Note:** If ``single_image`` or ``url`` parameter is not present, then keywords is a mandatory parameter. No other parameters are mandatory.
 

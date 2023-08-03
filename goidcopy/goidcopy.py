@@ -134,6 +134,7 @@ if args.timerange:
     ranges = str(args.timerange).split()
     timerange = {'time_min':ranges[0], 'time_max':ranges[1]}
     timerange = str(timerange).replace("'","\"")
+
 ##============= Globalen Variablen initialisieren =============
 
 headers = {
@@ -431,8 +432,9 @@ def _url_bauen(search):
     root = 'https://www.google.com/search?q='
     base = '&tbm=isch'
     if args.language:
+        lang = str(args.language).capitalize()
         param = {"Arabic":"ar","Chinese (Simplified)":"zh-CN","Chinese (Traditional)":"zh-TW","Czech":"cs","Danish":"da","Dutch":"nl","English":"en","Estonian":"et","Finnish":"fi","French":"fr","German":"de","Greek":"el","Hebrew":"iw ","Hungarian":"hu","Icelandic":"is","Italian":"it","Japanese":"ja","Korean":"ko","Latvian":"lv","Lithuanian":"lt","Norwegian":"no","Portuguese":"pt","Polish":"pl","Romanian":"ro","Russian":"ru","Spanish":"es","Swedish":"sv","Turkish":"tr"}
-        language = '&hl=' + param[args.language]
+        language = '&hl=' + param[lang]
     else: language = '&hl=pt'
     closer = language+'&sa=X&ved=0CAIQpwVqFwoTCKDZgKG4qYADFQAAAAAdAAAAABAD&biw=1263&bih=648'
     params = {
