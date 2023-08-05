@@ -20,146 +20,6 @@ from selenium.webdriver.common.by import By
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-config = argparse.ArgumentParser()
-config.add_argument('-cf', '--config_file', help='config file name', default='', type=str, required=False)
-config_file_check = config.parse_known_args()
-object_check = vars(config_file_check[0])
-#Argumente von Configdatei ausshalten
-if object_check['config_file'] != '':
-    args_list = ["keywords","extract","suffix","prefix","limit","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos"]
-    records = []
-    json_file = json.load(open(config_file_check[0].config_file))
-    for record in range(0,len(json_file['Records'])):
-        arguments = {}
-        for i in args_list:
-            arguments[i] = None
-        for key, value in json_file['Records'][record].items():
-            arguments[key] = value
-        records.append(arguments)
-    records_count = len(records)
-    print(records_count)
-#Argumente von Benutzerfernster auszugen
-else:
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-k', '--keywords', help='Delimited keywords for searching images', required=False)
-    parser.add_argument('-ek', '--extract', help='Worten, aus ein Datei oder Ahnlich erhalten!', required=False)
-    parser.add_argument('-sk', '--suffix', help='suffix keywords for searching more related images, kannst du auch Zufallprinzip auswahlen, um mit einigen Vorschalgen, die wir fur sie haben nachzusehen!', required=False)
-    parser.add_argument('-l', '--limit', help='Delimited list input', required=False)
-    parser.add_argument('-c', '--color', help='Filtering by color', required=False, choices=[
-        'red','yellow','blue','orange','violet','green','brown','white','black','gray','pink','teel','purple', 'brown'])
-    parser.add_argument('-ct', '--colortype', help='Filtern nach Farbenart', required=False, choices=['full-color', 'black-and-white', 'transparent'])
-    parser.add_argument('-u', '--url', help='Die Bildern nach Benutzerurl herunterladen werden', required=False)
-    parser.add_argument('-o', '--output', help='Entmoglich dir, den Name von Ausgeben zu auswahlen', required=False, type=str)
-    parser.add_argument('-s', '--single', help='Macht es moglich, ein einzelnes Bilder zu herunterladen', required=False, type=str)
-    parser.add_argument('-p', '--pause', help='Bezeicht die Zeit, dass wir warten wird zwischen Bildern', required=False, type=int)
-    parser.add_argument('-g', '--grosse', help='Sagt Sie, wie Grosse den Bildern sollen sind', required=False, choices=['large','medium','icon','>400*300','>640*480','>800*600','>1024*768','>2MP','>4MP','>6MP','>8MP','>10MP','>12MP','>15MP','>20MP','>40MP','>70MP'])
-    parser.add_argument('-t', '--type', help='Bezeicht die Typ oder Art von Bildern dass wir finden wird', required=False, choices=['face','photo','clip-art','lineart','animated'])
-    parser.add_argument('-z', '--time', help='Bezeicht die Zeit, in dass den Bildern hochgeladen wurden', required=False, choices=['past-24-hours','past-7-days','past-1-month','past-1-year'])
-    parser.add_argument('-r', '--rechte', help='Wahlen Sie der Benutzbedingungen dieses Bildern', required=False, type=str, choices=['labled-for-reuse-with-modifications','labled-for-reuse','labled-for-noncommercial-reuse-with-modification','labled-for-nocommercial-reuse'])
-    parser.add_argument('-f', '--format', help='Wahlen Sie der Format der Verwendung dieses Bildern', required=False, type=str, choices=['svg', 'gif', 'jpg', 'png', 'jpeg', 'tbn', 'ico', 'webp', 'bmp'])
-    parser.add_argument('-a', '--ahnlich', help='Geben Sie an, ob Sie nach ahnlichen Bildern suchen mochte', required=False, type=int)
-    parser.add_argument('-ar', '--aspekt', help='Geben Sie an, die Ratioaspekt den Bildern aus', required=False, type=str, choices=['tall', 'wide', 'panoramic', 'square'])
-    parser.add_argument('-w', '--webseite', help='Geben Sie an, die Webseite vor den die Bildern herunterladen werden sollen', required=False, type=str)
-    parser.add_argument('-to', '--timeout', help='Geben Sie an, die Zeit die wir fur an Antwort von der System warten sollen')
-    parser.add_argument('-pr', '--print', help="Zeichen Sie die URL von der gegeben Bildern!", default=False, action="store_true")
-    parser.add_argument('-sc', '--write', help="Auswahlen sie, ob ein Textdatei zu erstellen oder nicht", default=False, action="store_true")
-    parser.add_argument('-m', '--metadata', help="Geben Sie an, ob das Metadatei den Bildern zu gezeigt oder nicht", default=False, action="store_true")
-    parser.add_argument('-au', '--auszug', help="Auswahlen Sie an, ob das Metadatei den Bildern zu auszugen oder nicht", default=False, action="store_true")
-    parser.add_argument('-lm', '--lautlos', help="Aktivieren dieses Lautlos-Modus, um die Programm ohne Nachrichten zu laufen!", default=False, action="store_true")
-    parser.add_argument('-pre', '--prefix', help="Geben Sie ein Prafix an, dass an der Beginnen von jedem Suchen hinzugefugt werden!, kannst du es auch zufallig auswahlen!", type=str)
-    parser.add_argument('-la', '--language', help="Auswahlen in welche Sprache mochtest Du die Suchergebnisse erhalten!", choices=['Arabic','Chinese (Simplified)','Chinese (Traditional)','Czech','Danish','Dutch','English','Estonian','Finnish','French','German','Greek','Hebrew','Hungarian','Icelandic','Italian','Japanese','Korean','Latvian','Lithuanian','Norwegian','Portuguese','Polish','Romanian','Russian','Spanish','Swedish','Turkish'], type=str)
-    parser.add_argument('-zb', '--timerange', help="Geben Sie die Zeitbereich an, inzwischen unseres Bilder hochgeladen wurden, format {'time_min':'MM/DD/YYYY','time_min':'MM/DD/YYYY'}'")
-    args = parser.parse_args()
-    arguments = vars(args)
-    records = []
-    records.append(arguments)
-    records_count = len(records)
-#============= Parameter prufen =============
-
-if (arguments[keywords is None) and (arguments[url is None) and (arguments[single is None) and (arguments[extract is None):
-    parser.error('Keywordsargument obligatorisch ist!')
-
-if arguments[suffix:
-    if arguments[suffix == 'random':
-        suffix_keywords = ['course', 'college', 'school', 'for beginners', 'professional', 'curiosities', 'friendly', 'to learn', 'from 0 to hero', 'as it is', 'cool photos']
-    else:
-        suffix_keywords = [str(i).strip() for i in arguments[suffix.split(",")]
-        suffix_keywords.insert(0, '')
-else:
-    suffix_keywords = ['']
-
-if arguments[keywords:
-    search_keyword = [str(i) for i in arguments[keywords.split(',')]
-else:
-    search_keyword = ['']
-
-if arguments[prefix:
-    if arguments[prefix == 'random':
-        prefix = ['Real', 'Normal', 'Big', 'Small', 'Little', 'Pro', 'Pre', 'Post', 'Basic', 'Intermediate', 'Advance', 'How to']
-    else:
-        prefix = str(arguments[prefix).split(',')
-        for i in range(len(prefix)):
-            prefix[i] = prefix[i].strip()
-if arguments[extract:
-    fname = str(arguments[extract)
-    with open(fname, 'r', encoding='utf-8') as fhand:
-        if '.csv' in fname:
-            for line in fhand:
-                if line in ['\n', '\r\n']:
-                    pass
-                else:
-                    search_keyword.append(line.replace('\n', '').replace('\r', ''))
-        elif '.txt' in fname:
-            for line in fhand:
-                if line in ['\n', '\r\n']:
-                    pass
-                else:
-                    search_keyword.append(line.replace('\n', '').replace('\r', ''))
-        else:
-            print('Ungultiges Datei, bitte Geben Sie ein TXT oder CSV Art von Datei ein!\nAusgangen...')
-            sys.exit()
-if arguments[limit:
-    limit = int(arguments[limit)
-else:
-    limit = 100
-
-if arguments[output:
-    main_dir = arguments[output
-else:
-    main_dir = 'downloads'
-
-if arguments[pause:
-    try:
-        pause = int(arguments[pause)
-    except ValueError:
-        parser.error('Die Pause muss ein Zahl sein!')
-if not arguments[pause: 
-    pause = 0
-
-if arguments[webseite:
-    if "." not in arguments[webseite:
-        parser.error("Ungultiger Webseite!")
-    if " " in arguments[webseite:
-        parser.error("Ungultiger Webseite!")
-if arguments[print:
-    printURL = 'yes'
-else:
-    printURL = 'no'
-if arguments[timeout:
-    try:
-        timeout = float(arguments[timeout)
-    except TypeError:
-        print("Die Zeituberschreitung ein Gleitkommazahlen sind muss!")
-else: timeout = 15
-
-if arguments[time and arguments[timerange:
-    print("Fehler, Du kannst nur von Zeit oder Zeitbereich benutz, Du kannst nicht gleichzeitig sie benutz!")
-
-if arguments[timerange:
-    ranges = str(arguments[timerange).split()
-    timerange = {'time_min':ranges[0], 'time_max':ranges[1]}
-    timerange = str(timerange).replace("'","\"")
-
 ##============= Globalen Variablen initialisieren =============
 
 headers = {
@@ -169,6 +29,102 @@ ctx = ssl._create_unverified_context()
 
 
 #============= Funktionen erstellen =================
+
+#============= Parameter prufen =============
+
+def _validate_parameters(record):
+    
+    if (record['keywords'] is None) and (record['url'] is None) and (record['single'] is None) and (record['extract'] is None):
+        parser.error('Keywordsargument obligatorisch ist!')
+
+    if record['suffix']:
+        if record['suffix'] == 'random':
+            suffix_keywords = ['course', 'college', 'school', 'for beginners', 'professional', 'curiosities', 'friendly', 'to learn', 'from 0 to hero', 'as it is', 'cool photos']
+        else:
+            suffix_keywords = [str(i).strip() for i in record['suffix'].split(",")]
+            suffix_keywords.insert(0, '')
+    else:
+        suffix_keywords = ['']
+
+    if record['keywords']:
+        search_keyword = [str(i) for i in record['keywords'].split(',')]
+    else:
+        search_keyword = ['']
+
+    if record['prefix']:
+        if record['prefix'] == 'random':
+            prefix = ['Real', 'Normal', 'Big', 'Small', 'Little', 'Pro', 'Pre', 'Post', 'Basic', 'Intermediate', 'Advance', 'How to']
+        else:
+            prefix = str(record['prefix']).split(',')
+            for i in range(len(prefix)):
+                prefix[i] = prefix[i].strip()
+    else: prefix = None
+    if record['extract']:
+        fname = str(record['extract'])
+        with open(fname, 'r', encoding='utf-8') as fhand:
+            if '.csv' in fname:
+                for line in fhand:
+                    if line in ['\n', '\r\n']:
+                        pass
+                    else:
+                        search_keyword.append(line.replace('\n', '').replace('\r', ''))
+            elif '.txt' in fname:
+                for line in fhand:
+                    if line in ['\n', '\r\n']:
+                        pass
+                    else:
+                        search_keyword.append(line.replace('\n', '').replace('\r', ''))
+            else:
+                print('Ungultiges Datei, bitte Geben Sie ein TXT oder CSV Art von Datei ein!\nAusgangen...')
+                sys.exit()
+    if record['limit']:
+        limit = int(record['limit'])
+    else:
+        limit = 100
+
+    if record['output']:
+        main_dir = record['output']
+    else:
+        main_dir = 'downloads'
+
+    if record['pause']:
+        try:
+            pause = int(record['pause'])
+        except ValueError:
+            parser.error('Die Pause muss ein Zahl sein!')
+    else: 
+        pause = 0.5
+
+    if record['webseite']:
+        if "." not in record['webseite']:
+            parser.error("Ungultiger Webseite!")
+        if " " in record['webseite']:
+            parser.error("Ungultiger Webseite!")
+        webseite = record['webseite']
+    else: webseite = None
+    if record['print']:
+        printURL = 'yes'
+    else:
+        printURL = 'no'
+    if record['timeout']:
+        try:
+            timeout = float(record['timeout'])
+        except TypeError:
+            print("Die Zeituberschreitung ein Gleitkommazahlen sind muss!")
+    else: timeout = 15
+
+    if record['time'] and record['timerange']:
+        print("Fehler, Du kannst nur von Zeit oder Zeitbereich benutz, Du kannst nicht gleichzeitig sie benutz!")
+        quit()
+
+    if record['timerange']:
+        ranges = str(record['timerange']).split()
+        timerange = {'time_min':ranges[0], 'time_max':ranges[1]}
+        timerange = str(timerange).replace("'","\"")
+    else: timerange = None
+    validated_vars = {'search_keyword': search_keyword, 'suffix':suffix_keywords, 'prefix':prefix, 'limit':limit, 'main_dir':main_dir, 'pause':pause, 'printURL':printURL, 'timeout':timeout, 'timerange':timerange, 'webseite':webseite}
+    return validated_vars
+
 def download_over_limit(url):
     from selenium import webdriver
     from selenium.webdriver.common.by import By
@@ -200,7 +156,7 @@ def download_over_limit(url):
         print(err)
         return 'Seite Nicht Gefunden'
 
-def download_page(url, mode=''):
+def download_page(url, timeout, mode=''):
         version = (3,0)
         current_version = sys.version_info
         if current_version >= version:
@@ -219,7 +175,7 @@ def download_page(url, mode=''):
             except Exception as err:
                 print(err)
                 return 'Page Not Found'
-def download_image(object, dir, count, format=""):
+def download_image(object, dir, count, timeout, format=""):
     try: 
         url = object[1]['link']
     except KeyError:
@@ -228,11 +184,11 @@ def download_image(object, dir, count, format=""):
         download_message = 'Es tut mir leid aber wir diese Datei nicht benutzen kann'
         return object, download_status, download_message
         
-    if arguments[print:
+    if arguments['print']:
         print("BILDER URL:",url)
     try:
         #Seite herunterladen
-        data = download_page(url, mode='bytes')
+        data = download_page(url, timeout, mode='bytes')
         imgName = _find_name(url)
         if format == "":
             imgName = imgName + "-" + str(count) + "." + "jpg"
@@ -270,7 +226,7 @@ def download_image(object, dir, count, format=""):
 
         
 
-def _get_similar_images(url, n_Times):
+def _get_similar_images(url, n_Times, search_keyword):
     url = url
     req = request.Request(url, headers=headers)
     response = request.urlopen(req, None, timeout=10, context=ctx)
@@ -312,7 +268,6 @@ def _get_similar_images(url, n_Times):
                 similarImage = True
 
             #Das query am unsere Schlusselwortliste hinzufugen
-            global search_keyword
             search_keyword.append(unquote_plus(query))
             c += 1
 def _get_size(file_path):
@@ -324,7 +279,7 @@ def _get_size(file_path):
                 return "3%.1f %s"%(size, x)
             size /= 1024.0
 
-def _get_next_item(rawPage, retrieved_links):
+def _get_next_item(rawPage, retrieved_links, limit):
     #Dieses Abfragen sind die Ziechenfolgen, nach denen wir suchen, um die Datei aus unseren Bildern zu extrahieren
     queries = {'link':[('<img data-src=', 'src="'), ('" data-ils', '"')],
                'title':['<h3 class="bytUYc">', '</h3>'],
@@ -374,45 +329,43 @@ def _get_next_item(rawPage, retrieved_links):
     img_object = (title[:16], {'link':img_link, 'width':width, 'height':height, 'title':title, 'site':site})
     retrieved_links.append(img_object[1]['link'])
     return img_object, end_content, retrieved_links
-def _get_all_items(page, directory, index, limit):
+def _get_all_items(page, directory, index, limit, pause, format, write, lautlos, metadata, timeout):
     items = []
     retrieved = []
     count = 0
     success = 0
     error_count = 0
     searchName = directory.split('/')[-1]
-    if arguments[write:
+    if write:
         tuple = (index, searchName)
         _write_txt(tuple, mode='item')
-    format = (arguments[format if arguments[format else '')
     while count < limit:
-        item_object, end_content, retrieved = _get_next_item(page, retrieved)
+        item_object, end_content, retrieved = _get_next_item(page, retrieved, limit)
         if item_object == 'no_links':
             print('no more links')
             break
         else:
             page = page[end_content:]
-            item_object, download_status, download_message = download_image(item_object, directory, count+1, format)
+            item_object, download_status, download_message = download_image(item_object, directory, count+1, timeout, format)
             if download_status == 'Erfolg':
                 items.append(item_object)
-                if not arguments[lautlos:
+                if not lautlos:
                     print(download_message)
-                if arguments[metadata:
+                if metadata:
                     print("Bilder Metadatei:\n"+str(item_object))
-                if arguments[write:
+                if write:
                     _write_txt(str(item_object))
-                    if not arguments[lautlos:
+                    if not lautlos:
                         print("Textdatei schreibt!")
                 count += 1
                 success += 1
             else:
                 error_count += 1
-                if not arguments[lautlos:
+                if not lautlos:
                     print(download_message)
-            if arguments[pause:
-                time.sleep(pause)
+            time.sleep(pause)
     if success < limit:
-        if not arguments[lautlos:
+        if not lautlos:
             print('Es tut mir leid, aber ' + str(success) + ' ist alles, dass wir fur dieses Seite haben!')
     return items, error_count
 
@@ -452,25 +405,25 @@ def _save_image(directory, data, imgName):
         save_status = "Kein Datei, image not saved"
         return target_dir,  save_status
 
-def _url_bauen(search):
+def _url_bauen(constructor):
     bauen = "&tbs="
     root = 'https://www.google.com/search?q='
     base = '&tbm=isch'
-    if arguments[language:
-        lang = str(arguments[language).capitalize()
+    if constructor['language']:
+        lang = str(constructor['language']).capitalize()
         param = {"Arabic":"ar","Chinese (Simplified)":"zh-CN","Chinese (Traditional)":"zh-TW","Czech":"cs","Danish":"da","Dutch":"nl","English":"en","Estonian":"et","Finnish":"fi","French":"fr","German":"de","Greek":"el","Hebrew":"iw ","Hungarian":"hu","Icelandic":"is","Italian":"it","Japanese":"ja","Korean":"ko","Latvian":"lv","Lithuanian":"lt","Norwegian":"no","Portuguese":"pt","Polish":"pl","Romanian":"ro","Russian":"ru","Spanish":"es","Swedish":"sv","Turkish":"tr"}
         language = '&hl=' + param[lang]
     else: language = '&hl=pt'
     closer = language+'&sa=X&ved=0CAIQpwVqFwoTCKDZgKG4qYADFQAAAAAdAAAAABAD&biw=1263&bih=648'
     params = {
-        'color':[arguments[color, {'red':'ic:specific,isc:red', 'orange':'ic:specific,isc:orange', 'yellow':'ic:specific,isc:yellow', 'green':'ic:specific,isc:green', 'teal':'ic:specific,isc:teel', 'blue':'ic:specific,isc:blue', 'purple':'ic:specific,isc:purple', 'pink':'ic:specific,isc:pink', 'white':'ic:specific,isc:white', 'gray':'ic:specific,isc:gray', 'black':'ic:specific,isc:black', 'brown':'ic:specific,isc:brown'}],
-        'type':[arguments[type, {'face':'itp:face','photo':'itp:photo','clip-art':'itp:clip-art','lineart':'itp:lineart','animated':'itp:animated'}],
-        'format':[arguments[format, {'jpg':'ift:jpg','gif':'ift:gif','png':'ift:png','bmp':'ift:bmp','svg':'ift:svg','webp':'webp','ico':'ift:ico'}],
-        'grosse':[arguments[grosse, {'large':'isz:l', 'medium':'isz:m', 'small':'isz:s', 'icon':'isz:i','>400*300':'isz:lt,islt:qsvga','>640*480':'isz:lt,islt:vga','>800*600':'isz:lt,islt:svga','>1024*768':'visz:lt,islt:xga','>2MP':'isz:lt,islt:2mp','>4MP':'isz:lt,islt:4mp','>6MP':'isz:lt,islt:6mp','>8MP':'isz:lt,islt:8mp','>10MP':'isz:lt,islt:10mp','>12MP':'isz:lt,islt:12mp','>15MP':'isz:lt,islt:15mp','>20MP':'isz:lt,islt:20mp','>40MP':'isz:lt,islt:40mp','>70MP':'isz:lt,islt:70mp'}], 
-        'rechte':[arguments[rechte, {'labled-for-reuse-with-modifications':'sur:fmc', 'labled-for-reuse':'sur:fc','labled-for-noncommercial-reuse-with-modification':'sur:fm','labled-for-nocommercial-reuse':'sur:f'}],
-        'time':[arguments[time, {'past-24-hours':'qdr:d','past-7-days':'qdr:w', 'past-1-year':'qdr:y'}],
-        'color-type':[arguments[colortype, {'full-color':'ic:color','black-and-white':'ic:gray', 'transparent':'ic:trans'}],
-        'aspect_ratio':[arguments[aspekt,{'tall':'iar:t','square':'iar:s','wide':'iar:w','panoramic':'iar:xw'}]
+        'color':[constructor['color'], {'red':'ic:specific,isc:red', 'orange':'ic:specific,isc:orange', 'yellow':'ic:specific,isc:yellow', 'green':'ic:specific,isc:green', 'teal':'ic:specific,isc:teel', 'blue':'ic:specific,isc:blue', 'purple':'ic:specific,isc:purple', 'pink':'ic:specific,isc:pink', 'white':'ic:specific,isc:white', 'gray':'ic:specific,isc:gray', 'black':'ic:specific,isc:black', 'brown':'ic:specific,isc:brown'}],
+        'type':[constructor['type'], {'face':'itp:face','photo':'itp:photo','clip-art':'itp:clip-art','lineart':'itp:lineart','animated':'itp:animated'}],
+        'format':[constructor['format'], {'jpg':'ift:jpg','gif':'ift:gif','png':'ift:png','bmp':'ift:bmp','svg':'ift:svg','webp':'webp','ico':'ift:ico'}],
+        'grosse':[constructor['grosse'], {'large':'isz:l', 'medium':'isz:m', 'small':'isz:s', 'icon':'isz:i','>400*300':'isz:lt,islt:qsvga','>640*480':'isz:lt,islt:vga','>800*600':'isz:lt,islt:svga','>1024*768':'visz:lt,islt:xga','>2MP':'isz:lt,islt:2mp','>4MP':'isz:lt,islt:4mp','>6MP':'isz:lt,islt:6mp','>8MP':'isz:lt,islt:8mp','>10MP':'isz:lt,islt:10mp','>12MP':'isz:lt,islt:12mp','>15MP':'isz:lt,islt:15mp','>20MP':'isz:lt,islt:20mp','>40MP':'isz:lt,islt:40mp','>70MP':'isz:lt,islt:70mp'}], 
+        'rechte':[constructor['rechte'], {'labled-for-reuse-with-modifications':'sur:fmc', 'labled-for-reuse':'sur:fc','labled-for-noncommercial-reuse-with-modification':'sur:fm','labled-for-nocommercial-reuse':'sur:f'}],
+        'time':[constructor['time'], {'past-24-hours':'qdr:d','past-7-days':'qdr:w', 'past-1-year':'qdr:y'}],
+        'color-type':[constructor['colortype'], {'full-color':'ic:color','black-and-white':'ic:gray', 'transparent':'ic:trans'}],
+        'aspect_ratio':[constructor['aspekt'],{'tall':'iar:t','square':'iar:s','wide':'iar:w','panoramic':'iar:xw'}]
         }
     
     c = 0
@@ -483,15 +436,15 @@ def _url_bauen(search):
                 c += 1
             else:
                 bauen += "%2C"+output_param
-    if arguments[timerange:
-        js = json.loads(timerange)
+    if constructor['timerange']:
+        js = json.loads(constructor['timerange'])
         zeitbereich = '&cdr:1,cd_min:' + js['time_min'] + ',cd_max:' + js['time_max']
     else: zeitbereich = ''
 
-    if arguments[webseite:
-        url = root+search+",site:"+arguments[webseite+base+bauen+closer+zeitbereich
+    if constructor['webseite']:
+        url = root+constructor['search']+",site:"+record['webseite']+base+bauen+closer+zeitbereich
     else:
-        url = root+search+base+bauen+closer+zeitbereich
+        url = root+constructor['search']+base+bauen+closer+zeitbereich
     return url
 def _write_txt(data, mode='content'):
     if mode == 'item':
@@ -520,7 +473,7 @@ def _create_dir(*directories):
 def _set_name(dir):
     worked_name = dir
     desired_args = ['color','type','gross','rechte','time','format','colortype','aspekt','webseite']
-    values = [i[1] for i in arguments[_get_kwargs() if i[0] in desired_args and i[1] is not None]
+    values = [i for i in arguments.values() if i in desired_args and i is not None]
     for value in values:
         #Ausschielssen der Domain aus dem Webseite-Namen
         if "." in value:
@@ -528,41 +481,72 @@ def _set_name(dir):
         worked_name += " - " + value
     return worked_name
 
-def _single_image_download():
+def _single_image_download(record, vars):
     t0 = time.time()
-    url = arguments[single
+    url = record['single']
+    main_dir = vars['main_dir']
+    timeout = vars['timeout']
+    format = record['format']
     try:
-        imgData = download_page(url)
+        imgData = download_page(url, timeout, mode='bytes')
     except HTTPError:
         print("HTTP Fehler!")
+        t1 = time.time()
+        total_time = t1 - t0
+        download_status = "Fehler!"
+        return total_time, download_status
     except URLError:
         print("URL Fehler!")
+        t1 = time.time()
+        total_time = t1 - t0
+        download_status = "Fehler!"
+        return total_time, download_status
     except IOError:
         print("IO Fehler!")
-    imgName = _find_name(url)
+        t1 = time.time()
+        total_time = t1 - t0
+        download_status = "Fehler!"
+        return total_time, download_status
+    if format:
+        imgName = _find_name(url)+'.'+str(format)
+    else:
+        imgName = _find_name(url)+'.jpg'
     directory = _create_dir(main_dir)
-    _save_image(directory, data=imgData, imgName=imgName)
+    target_dir, download_status = _save_image(directory, data=imgData, imgName=imgName)
 
 
     t1 = time.time()
     total_time = t1 - t0
 
-    print("Bilder erfolgreich gespeichert! =====> "+imgName)
-    print("Programm Erfullt in "+str(total_time)+" Sekunden")
-    return
+    return total_time, download_status
 
 #============= Das Hauptprogramm =============
 
-def bulk_download(search_keyword, suffix_keywords, main_dir, limit):
+def bulk_download(record, vars):
+    search_keyword = vars['search_keyword']
+    suffix_keywords = vars['suffix']
+    prefix = vars['prefix']
+    main_dir = vars['main_dir']
+    printURL = vars['printURL']
+    webseite = vars['webseite']
+    limit = vars['limit']
+    pause = vars['pause']
+    timerange = vars['timerange']
+    timeout = vars['timeout']
+    format = (record['format'] if record['format'] else '')
+    write = record['write']
+    lautlos = record['lautlos']
+    metadata = record['metadata']
+
     t0 = time.time()
     total_errors = 0
-    if arguments[url:
-        search = _find_search(arguments[url)
+    if record['url']:
+        search = _find_search(record['url'])
         search_keyword.append(search)
-        url = arguments[url
-        if arguments[ahnlich:
-            _get_similar_images(url, arguments[ahnlich)
-    if arguments[prefix:
+        url = arguments['url']
+        if record['ahnlich']:
+            _get_similar_images(url, record['ahnlich'], search_keyword)
+    if record['prefix']:
         prefixed_words = [str(j) + " " + str(i) for i in search_keyword for j in prefix]
         for i in prefixed_words:
             search_keyword.append(i)
@@ -572,22 +556,25 @@ def bulk_download(search_keyword, suffix_keywords, main_dir, limit):
             rootword = search_keyword[i].strip()
             word = rootword + " " + suffix
             iteration = "\nSuchen nu.:" + str(i+1) + " / / == > " + word
-            if not arguments[lautlos:
+            if not record['lautlos']:
                 print(iteration+"\n"+"Auswertend...")
             dir_name = _set_name(word)
             directory = _create_dir(main_dir, dir_name).strip()
-            if arguments[url is None or i > 0:
-                url = _url_bauen(quote(word))
+            if record['url'] is None or i > 0:
+                bauen = record
+                bauen['timerange'] = timerange
+                bauen['search'] = quote(word)
+                url = _url_bauen(bauen)
             if limit <= 100:
-                page = download_page(url)
+                page = download_page(url, timeout=timeout)
             else: 
                 page = download_over_limit(url)
             #Die Sucheliste zu vermehren
-            if arguments[ahnlich and i == 0:
-                _get_similar_images(url, arguments[ahnlich)
+            if record['ahnlich'] and i == 0:
+                _get_similar_images(url, record['ahnlich'])
             i += 1
-            items, error_count = _get_all_items(page, directory, i+1, limit)
-            if arguments[auszug:
+            items, error_count = _get_all_items(page, directory, i+1, limit, pause, format, write, lautlos, timeout, metadata)
+            if record['auszug']:
                 if (len(items) > 0):
                     zeit = time.strftime("%d-%B-%Y", time.gmtime())
                     logs_path = 'logs/'+zeit+"/"
@@ -598,7 +585,7 @@ def bulk_download(search_keyword, suffix_keywords, main_dir, limit):
                         print(error)
                     with open(logs_path+word+".json", "a") as js:
                         js.write(json.dumps(items, indent=4))
-                    if not arguments[lautlos:
+                    if not record['lautlos']:
                         print('JSONDatei erstellen!')
                 else: print("Leereres Datei, wir kann keine JSON schreiben!")
             total_errors += error_count
@@ -606,15 +593,77 @@ def bulk_download(search_keyword, suffix_keywords, main_dir, limit):
     total_time = t1 - t0
     return total_time, total_errors
 
-            
-    #     /////////////////  Ende des Programm  /////////////////
+# ======================= Alle Funktionen initialisierten =================================
 
-if arguments['single']:
-    _single_image_download()
+config = argparse.ArgumentParser()
+config.add_argument('-cf', '--config_file', help='config file name', default='', type=str, required=False)
+config_file_check = config.parse_known_args()
+object_check = vars(config_file_check[0])
+#Argumente von Configdatei ausshalten
+if object_check['config_file'] != '':
+    args_list = ["keywords","extract","suffix","prefix","limit","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos"]
+    records = []
+    json_file = json.load(open(config_file_check[0].config_file))
+    for record in range(0,len(json_file['Records'])):
+        arguments = {}
+        for i in args_list:
+            arguments[i] = None
+        for key, value in json_file['Records'][record].items():
+            arguments[key] = value
+        records.append(arguments)
+    records_count = len(records)
+    print(records_count)
+
+#Argumente von Benutzerfernster auszugen
 else:
-    total_time, total_errors = bulk_download(search_keyword, suffix_keywords, main_dir, limit)
-    print('Alle Bildern herunterladen\nFehler:'+str(total_errors)+"\n")
-    # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
-    print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden\n(ist die Zeit die wir verbracht haben, die Bildlinks zu finden!)")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-k', '--keywords', help='Delimited keywords for searching images', required=False)
+    parser.add_argument('-ek', '--extract', help='Worten, aus ein Datei oder Ahnlich erhalten!', required=False)
+    parser.add_argument('-sk', '--suffix', help='suffix keywords for searching more related images, kannst du auch Zufallprinzip auswahlen, um mit einigen Vorschalgen, die wir fur sie haben nachzusehen!', required=False)
+    parser.add_argument('-l', '--limit', help='Delimited list input', required=False)
+    parser.add_argument('-c', '--color', help='Filtering by color', required=False, choices=[
+        'red','yellow','blue','orange','violet','green','brown','white','black','gray','pink','teel','purple', 'brown'])
+    parser.add_argument('-ct', '--colortype', help='Filtern nach Farbenart', required=False, choices=['full-color', 'black-and-white', 'transparent'])
+    parser.add_argument('-u', '--url', help='Die Bildern nach Benutzerurl herunterladen werden', required=False)
+    parser.add_argument('-o', '--output', help='Entmoglich dir, den Name von Ausgeben zu auswahlen', required=False, type=str)
+    parser.add_argument('-s', '--single', help='Macht es moglich, ein einzelnes Bilder zu herunterladen', required=False, type=str)
+    parser.add_argument('-p', '--pause', help='Bezeicht die Zeit, dass wir warten wird zwischen Bildern', required=False, type=int)
+    parser.add_argument('-g', '--grosse', help='Sagt Sie, wie Grosse den Bildern sollen sind', required=False, choices=['large','medium','icon','>400*300','>640*480','>800*600','>1024*768','>2MP','>4MP','>6MP','>8MP','>10MP','>12MP','>15MP','>20MP','>40MP','>70MP'])
+    parser.add_argument('-t', '--type', help='Bezeicht die Typ oder Art von Bildern dass wir finden wird', required=False, choices=['face','photo','clip-art','lineart','animated'])
+    parser.add_argument('-z', '--time', help='Bezeicht die Zeit, in dass den Bildern hochgeladen wurden', required=False, choices=['past-24-hours','past-7-days','past-1-month','past-1-year'])
+    parser.add_argument('-r', '--rechte', help='Wahlen Sie der Benutzbedingungen dieses Bildern', required=False, type=str, choices=['labled-for-reuse-with-modifications','labled-for-reuse','labled-for-noncommercial-reuse-with-modification','labled-for-nocommercial-reuse'])
+    parser.add_argument('-f', '--format', help='Wahlen Sie der Format der Verwendung dieses Bildern', required=False, type=str, choices=['svg', 'gif', 'jpg', 'png', 'jpeg', 'tbn', 'ico', 'webp', 'bmp'])
+    parser.add_argument('-a', '--ahnlich', help='Geben Sie an, ob Sie nach ahnlichen Bildern suchen mochte', required=False, type=int)
+    parser.add_argument('-ar', '--aspekt', help='Geben Sie an, die Ratioaspekt den Bildern aus', required=False, type=str, choices=['tall', 'wide', 'panoramic', 'square'])
+    parser.add_argument('-w', '--webseite', help='Geben Sie an, die Webseite vor den die Bildern herunterladen werden sollen', required=False, type=str)
+    parser.add_argument('-to', '--timeout', help='Geben Sie an, die Zeit die wir fur an Antwort von der System warten sollen')
+    parser.add_argument('-pr', '--print', help="Zeichen Sie die URL von der gegeben Bildern!", default=False, action="store_true")
+    parser.add_argument('-sc', '--write', help="Auswahlen sie, ob ein Textdatei zu erstellen oder nicht", default=False, action="store_true")
+    parser.add_argument('-m', '--metadata', help="Geben Sie an, ob das Metadatei den Bildern zu gezeigt oder nicht", default=False, action="store_true")
+    parser.add_argument('-au', '--auszug', help="Auswahlen Sie an, ob das Metadatei den Bildern zu auszugen oder nicht", default=False, action="store_true")
+    parser.add_argument('-lm', '--lautlos', help="Aktivieren dieses Lautlos-Modus, um die Programm ohne Nachrichten zu laufen!", default=False, action="store_true")
+    parser.add_argument('-pre', '--prefix', help="Geben Sie ein Prafix an, dass an der Beginnen von jedem Suchen hinzugefugt werden!, kannst du es auch zufallig auswahlen!", type=str)
+    parser.add_argument('-la', '--language', help="Auswahlen in welche Sprache mochtest Du die Suchergebnisse erhalten!", choices=['Arabic','Chinese (Simplified)','Chinese (Traditional)','Czech','Danish','Dutch','English','Estonian','Finnish','French','German','Greek','Hebrew','Hungarian','Icelandic','Italian','Japanese','Korean','Latvian','Lithuanian','Norwegian','Portuguese','Polish','Romanian','Russian','Spanish','Swedish','Turkish'], type=str)
+    parser.add_argument('-zb', '--timerange', help="Geben Sie die Zeitbereich an, inzwischen unseres Bilder hochgeladen wurden, format {'time_min':'MM/DD/YYYY','time_min':'MM/DD/YYYY'}'")
+    args = parser.parse_args()
+    arguments = vars(args)
+    records = []
+    records.append(arguments)
+    records_count = len(records)            
+    #     /////////////////  Hauptteil des Programm  /////////////////
 
+for i in range(len(records)):
+    if records[i]['single']:
+        validated_vars = _validate_parameters(records[i])
+        total_time, download_status = _single_image_download(records[i], validated_vars)
+        print(download_status)
+        print("Programm Erfullt in "+str(total_time)+" Sekunden")
+    else:
+        print('record nummer: ' + str(i+1))
+        validated_vars = _validate_parameters(records[i])
+        total_time, total_errors = bulk_download(records[i], validated_vars)
+        print('Alle Bildern herunterladen\nFehler:'+str(total_errors)+"\n")
+        # Berechnung die Gesamtzeit, die benotig wird, um alle links von 60.000 Bilder zu crawlen, zu finden und herunterzuladen
+        print("Gesamtzeitaufwand: "+ str(total_time)+ " Sekunden\n(ist die Zeit die wir verbracht haben, die Bildlinks zu finden!)")
+print('Alle Datensatze bearbeitet!')
 # %%
