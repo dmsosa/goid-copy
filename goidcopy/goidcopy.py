@@ -49,7 +49,7 @@ def _validate_parameters(record):
     if record['keywords']:
         search_keyword = [str(i) for i in record['keywords'].split(',')]
     else:
-        search_keyword = ['']
+        search_keyword = []
 
     if record['prefix']:
         if record['prefix'] == 'random':
@@ -93,7 +93,7 @@ def _validate_parameters(record):
         except ValueError:
             parser.error('Die Pause muss ein Zahl sein!')
     else: 
-        pause = 0.5
+        pause = 0.05
 
     if record['webseite']:
         if "." not in record['webseite']:
@@ -226,11 +226,12 @@ def download_image(object, dir, count, timeout, format=""):
 
         
 
-def _get_similar_images(url, n_Times, search_keyword):
+def _get_similar_images(url, n_Times, searches):
     url = url
     req = request.Request(url, headers=headers)
     response = request.urlopen(req, None, timeout=10, context=ctx)
     data = str(response.read())
+    search_keyword = searches
     #<a href=> finden
     c = 0
     if n_Times > 12:
@@ -270,6 +271,7 @@ def _get_similar_images(url, n_Times, search_keyword):
             #Das query am unsere Schlusselwortliste hinzufugen
             search_keyword.append(unquote_plus(query))
             c += 1
+    return search_keyword
 def _get_size(file_path):
     if os.path.isfile(file_path):
         file_info = os.stat(file_path)
@@ -329,13 +331,20 @@ def _get_next_item(rawPage, retrieved_links, limit):
     img_object = (title[:16], {'link':img_link, 'width':width, 'height':height, 'title':title, 'site':site})
     retrieved_links.append(img_object[1]['link'])
     return img_object, end_content, retrieved_links
-def _get_all_items(page, directory, index, limit, pause, format, write, lautlos, metadata, timeout):
+def _get_all_items(page, directory, index, constructor):
     items = []
     retrieved = []
     count = 0
     success = 0
     error_count = 0
     searchName = directory.split('/')[-1]
+    limit = constructor['limit']
+    pause = constructor['pause']
+    format = constructor['format']
+    write = constructor['write']
+    lautlos = constructor['lautlos']
+    metadata = constructor['metadata']
+    timeout = constructor['timeout']
     if write:
         tuple = (index, searchName)
         _write_txt(tuple, mode='item')
@@ -405,7 +414,7 @@ def _save_image(directory, data, imgName):
         save_status = "Kein Datei, image not saved"
         return target_dir,  save_status
 
-def _url_bauen(constructor):
+def _url_bauen(constructor, mode=''):
     bauen = "&tbs="
     root = 'https://www.google.com/search?q='
     base = '&tbm=isch'
@@ -445,6 +454,8 @@ def _url_bauen(constructor):
         url = root+constructor['search']+",site:"+record['webseite']+base+bauen+closer+zeitbereich
     else:
         url = root+constructor['search']+base+bauen+closer+zeitbereich
+    if mode == 'normalize':
+        url = root+constructor['search']+base+closer
     return url
 def _write_txt(data, mode='content'):
     if mode == 'item':
@@ -545,7 +556,7 @@ def bulk_download(record, vars):
         search_keyword.append(search)
         url = arguments['url']
         if record['ahnlich']:
-            _get_similar_images(url, record['ahnlich'], search_keyword)
+            search_keyword = _get_similar_images(record['language'], record['ahnlich'], search_keyword)
     if record['prefix']:
         prefixed_words = [str(j) + " " + str(i) for i in search_keyword for j in prefix]
         for i in prefixed_words:
@@ -571,9 +582,12 @@ def bulk_download(record, vars):
                 page = download_over_limit(url)
             #Die Sucheliste zu vermehren
             if record['ahnlich'] and i == 0:
-                _get_similar_images(url, record['ahnlich'])
+                url = _url_bauen(bauen, mode='normalize')
+                search_keyword = _get_similar_images(url, record['ahnlich'], search_keyword)
+                print('neuer suchen', search_keyword)
             i += 1
-            items, error_count = _get_all_items(page, directory, i+1, limit, pause, format, write, lautlos, timeout, metadata)
+            constructor = {'limit':limit, 'pause':pause, 'format':format, 'write':write, 'lautlos':lautlos, 'metadata':metadata, 'timeout':timeout}
+            items, error_count = _get_all_items(page, directory, i+1, constructor)
             if record['auszug']:
                 if (len(items) > 0):
                     zeit = time.strftime("%d-%B-%Y", time.gmtime())
@@ -601,7 +615,7 @@ config_file_check = config.parse_known_args()
 object_check = vars(config_file_check[0])
 #Argumente von Configdatei ausshalten
 if object_check['config_file'] != '':
-    args_list = ["keywords","extract","suffix","prefix","limit","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos"]
+    args_list = ["keywords","extract","suffix","prefix","limit","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos", "write"]
     records = []
     json_file = json.load(open(config_file_check[0].config_file))
     for record in range(0,len(json_file['Records'])):
@@ -621,7 +635,7 @@ else:
     parser.add_argument('-ek', '--extract', help='Worten, aus ein Datei oder Ahnlich erhalten!', required=False)
     parser.add_argument('-sk', '--suffix', help='suffix keywords for searching more related images, kannst du auch Zufallprinzip auswahlen, um mit einigen Vorschalgen, die wir fur sie haben nachzusehen!', required=False)
     parser.add_argument('-l', '--limit', help='Delimited list input', required=False)
-    parser.add_argument('-c', '--color', help='Filtering by color', required=False, choices=[
+    parser.add_argument('-cc', '--color', help='Filtering by color', required=False, choices=[
         'red','yellow','blue','orange','violet','green','brown','white','black','gray','pink','teel','purple', 'brown'])
     parser.add_argument('-ct', '--colortype', help='Filtern nach Farbenart', required=False, choices=['full-color', 'black-and-white', 'transparent'])
     parser.add_argument('-u', '--url', help='Die Bildern nach Benutzerurl herunterladen werden', required=False)
