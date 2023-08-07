@@ -228,45 +228,43 @@ def download_image(object, dir, count, timeout, format=""):
 
 def _get_similar_images(url, n_Times, searches):
     url = url
+    
     req = request.Request(url, headers=headers)
     response = request.urlopen(req, None, timeout=10, context=ctx)
     data = str(response.read())
+    print(url)
+
     search_keyword = searches
-    #<a href=> finden
     c = 0
     if n_Times > 12:
         n_Times = 12
-    similarImage = True
     while c < n_Times:
+        similarImage = True
         start_similar_images = data.find('<h2 class="OkhOw gadasb">')
         if start_similar_images == -1:
+            print('keine')
             #Keine Ahnliche Bildern gefunden
             break
         first_similar_image = True
         while similarImage and c < n_Times:
             if first_similar_image:
-                start_href = data.find('<a href="', start_similar_images)
+                start_href = data.find('href="', start_similar_images)
                 first_similar_image = False
             else:
-                start_href = data.find('<a href="')
+                start_href = data.find('href="')
             end_href = data.find('"', start_href+9)
             href = data[start_href+9:end_href]
-            data = data[end_href:]
-
-            
-            
-            query_start = href.find('?q=')
-            query_end = href.find('&amp;')
-            query = href[query_start+3:query_end]
-            start_a_tag = data.find('<a href="')
-            end_a_tag = data.find('>', start_a_tag)
-            a_tag = data[start_a_tag:end_a_tag]
-
+            end_a_tag = data.find('">', start_href)
+            a_tag = data[start_href:end_a_tag]
 
             if 'class="mgK4fd"' not in a_tag:
                 similarImage = False
             else:
                 similarImage = True
+            query_start = href.find('?q=')
+            query_end = href.find('&amp;')
+            query = href[query_start+3:query_end]
+            data = data[end_href:]
 
             #Das query am unsere Schlusselwortliste hinzufugen
             search_keyword.append(unquote_plus(query))
