@@ -81,17 +81,22 @@ Arguments
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 | usage_rights     | r           | Denotes the usage rights/licence under which the image is classified.                                                         |
 |                  |             | `Possible values:                                                                                                             |
-|                  |             | * labled-for-reuse-with-modifications,                                                                                        |
-|                  |             | * labled-for-reuse,                                                                                                           |
-|                  |             | * labled-for-noncommercial-reuse-with-modification,                                                                           |
-|                  |             | * labled-for-nocommercial-reuse`                                                                                              |
+|                  |             | * labeled-for-reuse-with-modifications,                                                                                        |
+|                  |             | * labeled-for-reuse,                                                                                                           |
+|                  |             | * labeled-for-noncommercial-reuse-with-modification,                                                                           |
+|                  |             | * labeled-for-nocommercial-reuse`                                                                                              |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 | size             | s           | Denotes the relative size of the image to be downloaded.                                                                      |
 |                  |             | `Possible values: large, medium, icon, >400*300, >640*480, >800*600, >1024*768, >2MP, >4MP, >6MP, >8MP, >10MP,`               |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 | aspect_ratio     | a           | Denotes the aspect ration of images to download.                                                                              |
 |                  |             | `Possible values: tall, square, wide, panoramic`                                                                              |
-+------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
++------------------+-------------
++-------------------------------------------------------------------------------------------------------------------------------+
+| rechte    | r           | Denotes the aspect ration of images to download.                                                                              |
+|                  |             | `Possible values: tall, square, wide, panoramic`                                                                              |
++------------------+-------------
++-------------------------------------------------------------------------------------------------------------------------------+
 | type             | t           | Denotes the type of image to be downloaded.                                                                                   |
 |                  |             | `Possible values: face,photo,clip-art,line-drawing,animated`                                                                  |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
@@ -240,7 +245,7 @@ Mehrere Biespiele
 
 -  To download images with specific usage rights
 
-``googleimagesdownload --keywords "universe" --usage_rights labled-for-reuse``
+``googleimagesdownload --keywords "universe" --usage_rights labeled-for-reuse``
 
 -  To download images with specific color type
 
