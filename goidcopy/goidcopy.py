@@ -231,9 +231,7 @@ def _get_similar_images(url, n_Times, searches):
     
     req = request.Request(url, headers=headers)
     response = request.urlopen(req, None, timeout=10, context=ctx)
-    data = str(response.read())
-    print(url)
-
+    data = response.read().decode('utf-8')
     search_keyword = searches
     c = 0
     if n_Times > 12:
@@ -241,9 +239,9 @@ def _get_similar_images(url, n_Times, searches):
     while c < n_Times:
         similarImage = True
         start_similar_images = data.find('<h2 class="OkhOw gadasb">')
+        header = data[start_similar_images+25:data.find("</h2>", start_similar_images)]
         if start_similar_images == -1:
-            print('keine')
-            #Keine Ahnliche Bildern gefunden
+            print('Keine Ahnliche Bildern gefunden')
             break
         first_similar_image = True
         while similarImage and c < n_Times:
@@ -269,7 +267,7 @@ def _get_similar_images(url, n_Times, searches):
             #Das query am unsere Schlusselwortliste hinzufugen
             search_keyword.append(unquote_plus(query))
             c += 1
-    return search_keyword
+    return header, search_keyword
 def _get_size(file_path):
     if os.path.isfile(file_path):
         file_info = os.stat(file_path)
@@ -417,7 +415,7 @@ def _url_bauen(constructor, mode=''):
     root = 'https://www.google.com/search?q='
     base = '&tbm=isch'
     if constructor['language']:
-        lang = str(constructor['language']).capitalize()
+        lang = str(constructor['language'])
         param = {"Arabic":"ar","Chinese (Simplified)":"zh-CN","Chinese (Traditional)":"zh-TW","Czech":"cs","Danish":"da","Dutch":"nl","English":"en","Estonian":"et","Finnish":"fi","French":"fr","German":"de","Greek":"el","Hebrew":"iw ","Hungarian":"hu","Icelandic":"is","Italian":"it","Japanese":"ja","Korean":"ko","Latvian":"lv","Lithuanian":"lt","Norwegian":"no","Portuguese":"pt","Polish":"pl","Romanian":"ro","Russian":"ru","Spanish":"es","Swedish":"sv","Turkish":"tr"}
         language = '&hl=' + param[lang]
     else: language = '&hl=pt'
@@ -581,8 +579,9 @@ def bulk_download(record, vars):
             #Die Sucheliste zu vermehren
             if record['ahnlich'] and i == 0:
                 url = _url_bauen(bauen, mode='normalize')
-                search_keyword = _get_similar_images(url, record['ahnlich'], search_keyword)
-                print('neuer suchen', search_keyword)
+                header, search_keyword = _get_similar_images(url, record['ahnlich'], search_keyword)
+                if not record['lautlos']:
+                    print(header, search_keyword.pop(0))
             i += 1
             constructor = {'limit':limit, 'pause':pause, 'format':format, 'write':write, 'lautlos':lautlos, 'metadata':metadata, 'timeout':timeout}
             items, error_count = _get_all_items(page, directory, i+1, constructor)
