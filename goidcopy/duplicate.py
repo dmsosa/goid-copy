@@ -2,7 +2,7 @@
 from goidcopy import googleimagesdownload
 
 downloader = googleimagesdownload()
-dicto = {'keywords':'Licht', 'limit':4}
+dicto = {'keywords':'Marcos', 'suffix':'Querido','limit':4}
 record, vars = downloader.make_arguments(dicto)
 totalT, totalE = downloader.download(record, vars)
 print(totalT, totalE)

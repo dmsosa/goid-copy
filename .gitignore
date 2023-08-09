@@ -1,7 +1,3 @@
-/venv
-//duplicate.py
-//downloads/
-//logs/
-/goidcopy/*.txt
-//_pycache/
-//goidcopy/**
+venv/
+goidcopy/*
+logs/
