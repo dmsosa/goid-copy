@@ -1,5 +1,7 @@
 /venv
-duplicate.py
-/goidcopy/downloads
-/goidcopy/logs/
+//duplicate.py
+//downloads/
+//logs/
 /goidcopy/*.txt
+//_pycache/
+//goidcopy/**
