@@ -153,7 +153,6 @@ def download_over_limit(url):
         rawPage = driver.page_source
         return rawPage
     except Exception as err:
-        print(err)
         return 'Seite Nicht Gefunden'
 
 def download_page(url, timeout, mode=''):
@@ -174,7 +173,8 @@ def download_page(url, timeout, mode=''):
                 return rawPage
             except Exception as err:
                 print(err)
-                return 'Page Not Found'
+                page = 'Page Not Found'
+                return page
 def download_image(object, dir, count, timeout, format=""):
     try: 
         url = object[1]['link']
@@ -190,6 +190,10 @@ def download_image(object, dir, count, timeout, format=""):
         #Seite herunterladen
         data = download_page(url, timeout, mode='bytes')
         imgName = _find_name(url)
+        if data == 'Page Not Found':
+            download_status = 'Versagen'
+            download_message = "URL error in ein Bild, die nachsten versuchen..."
+            return object, download_status, download_message
         if format == "":
             imgName = imgName + "-" + str(count) + "." + "jpg"
         else:
@@ -228,11 +232,15 @@ def download_image(object, dir, count, timeout, format=""):
 
 def _get_similar_images(url, n_Times, searches):
     url = url
-    
+    error_count = 0
     req = request.Request(url, headers=headers)
     response = request.urlopen(req, None, timeout=10, context=ctx)
     data = response.read().decode('utf-8')
     search_keyword = searches
+    if url == 'Page Not Found':
+        error_count += 1
+        header = 'Keine Ahnliche Bildern gefunden'
+        return header, search_keyword, error_count
     c = 0
     if n_Times > 12:
         n_Times = 12
@@ -267,7 +275,7 @@ def _get_similar_images(url, n_Times, searches):
             #Das query am unsere Schlusselwortliste hinzufugen
             search_keyword.append(unquote_plus(query))
             c += 1
-    return header, search_keyword
+    return header, search_keyword, error_count
 def _get_size(file_path):
     if os.path.isfile(file_path):
         file_info = os.stat(file_path)
@@ -344,6 +352,9 @@ def _get_all_items(page, directory, index, constructor):
     if write:
         tuple = (index, searchName)
         _write_txt(tuple, mode='item')
+    if page == 'Page Not Found':
+        error_count += 1
+        return items, error_count
     while count < limit:
         item_object, end_content, retrieved = _get_next_item(page, retrieved, limit)
         if item_object == 'no_links':
@@ -544,15 +555,19 @@ def bulk_download(record, vars):
     write = record['write']
     lautlos = record['lautlos']
     metadata = record['metadata']
+ 
 
     t0 = time.time()
     total_errors = 0
+    error_count = 0
     if record['url']:
         search = _find_search(record['url'])
         search_keyword.append(search)
         url = arguments['url']
         if record['ahnlich']:
-            search_keyword = _get_similar_images(record['language'], record['ahnlich'], search_keyword)
+            header, search_keyword, errors = _get_similar_images(record['language'], record['ahnlich'], search_keyword)
+            if errors > 0:
+                error_count += 1
     if record['prefix']:
         prefixed_words = [str(j) + " " + str(i) for i in search_keyword for j in prefix]
         for i in prefixed_words:
@@ -577,28 +592,33 @@ def bulk_download(record, vars):
             else: 
                 page = download_over_limit(url)
             #Die Sucheliste zu vermehren
-            if record['ahnlich'] and i == 0:
-                url = _url_bauen(bauen, mode='normalize')
-                header, search_keyword = _get_similar_images(url, record['ahnlich'], search_keyword)
-                if not record['lautlos']:
-                    print(header, search_keyword.pop(0))
-            i += 1
-            constructor = {'limit':limit, 'pause':pause, 'format':format, 'write':write, 'lautlos':lautlos, 'metadata':metadata, 'timeout':timeout}
-            items, error_count = _get_all_items(page, directory, i+1, constructor)
-            if record['auszug']:
-                if (len(items) > 0):
-                    zeit = time.strftime("%d-%B-%Y", time.gmtime())
-                    logs_path = 'logs/'+zeit+"/"
-                    try:
-                        if not os.path.exists(logs_path):
-                            os.makedirs(logs_path)
-                    except OSError as error:
-                        print(error)
-                    with open(logs_path+word+".json", "a") as js:
-                        js.write(json.dumps(items, indent=4))
+            if page != 'Page Not Found':
+                if record['ahnlich'] and i == 0:
+                    url = _url_bauen(bauen, mode='normalize')
+                    header, search_keyword, errors = _get_similar_images(url, record['ahnlich'], search_keyword)
+                    if errors > 0:
+                        error_count += 1
                     if not record['lautlos']:
-                        print('JSONDatei erstellen!')
-                else: print("Leereres Datei, wir kann keine JSON schreiben!")
+                        print(header, search_keyword.pop(0))
+                i += 1
+                constructor = {'limit':limit, 'pause':pause, 'format':format, 'write':write, 'lautlos':lautlos, 'metadata':metadata, 'timeout':timeout}
+                items, error_count = _get_all_items(page, directory, i, constructor)
+                if record['auszug']:
+                    if (len(items) > 0):
+                        zeit = time.strftime("%d-%B-%Y", time.gmtime())
+                        logs_path = 'logs/'+zeit+"/"
+                        try:
+                            if not os.path.exists(logs_path):
+                                os.makedirs(logs_path)
+                        except OSError as error:
+                            print(error)
+                        with open(logs_path+word+".json", "a") as js:
+                            js.write(json.dumps(items, indent=4))
+                        if not record['lautlos']:
+                            print('JSONDatei erstellen!')
+                    else: print("Leereres Datei, wir kann keine JSON schreiben!")
+            else: 
+                error_count += 1
             total_errors += error_count
     t1 = time.time() 
     total_time = t1 - t0
