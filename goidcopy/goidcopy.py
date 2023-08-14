@@ -37,7 +37,7 @@ class googleimagesdownload:
     def _validate_parameters(self, record):
         parser = argparse.ArgumentParser()
         if (record['keywords'] is None) and (record['url'] is None) and (record['single'] is None) and (record['extract'] is None):
-            parser.error('Keywordsargument obligatorisch ist!')
+            parser.error('Keywordsargument obligatorisch ist!\n\nBitte schau mal unsere GitHub Dokumentation, um das Program richtig benutz!\n\nwww.github.com\\duvi\\goidcopy')
 
         if record['suffix']:
             if record['suffix'] == 'random':
@@ -124,6 +124,8 @@ class googleimagesdownload:
             timerange = {'time_min':ranges[0], 'time_max':ranges[1]}
             timerange = str(timerange).replace("'","\"")
         else: timerange = None
+        if record['genaue'] and record['grosse']:
+            parser.error("Du kannst nicht gleichzeitig die Genaue Grosse und Grosse benutz!")
         validated_vars = {'search_keyword': search_keyword, 'suffix':suffix_keywords, 'prefix':prefix, 'limit':limit, 'main_dir':main_dir, 'pause':pause, 'printURL':printURL, 'timeout':timeout, 'timerange':timerange, 'webseite':webseite}
         return validated_vars
 
@@ -351,6 +353,7 @@ class googleimagesdownload:
         metadata = constructor['metadata']
         timeout = constructor['timeout']
         printURL = constructor['printURL']
+        abpath = []
         if write:
             tuple = (index, searchName)
             self._write_txt(tuple, mode='item')
@@ -375,6 +378,7 @@ class googleimagesdownload:
                         self._write_txt(str(item_object))
                         if not lautlos:
                             print("Textdatei schreibt!")
+                    abpath.append(item_object[1]['link'])
                     count += 1
                     success += 1
                 else:
@@ -385,7 +389,7 @@ class googleimagesdownload:
         if success < limit:
             if not lautlos:
                 print('Es tut mir leid, aber ' + str(success) + ' ist alles, dass wir fur dieses Seite haben!')
-        return items, error_count
+        return items, abpath, error_count
 
     def _find_search(self, url):
         start = url.find('q=')
@@ -443,6 +447,11 @@ class googleimagesdownload:
             'color-type':[constructor['colortype'], {'full-color':'ic:color','black-and-white':'ic:gray', 'transparent':'ic:trans'}],
             'aspect_ratio':[constructor['aspekt'],{'tall':'iar:t','square':'iar:s','wide':'iar:w','panoramic':'iar:xw'}]
             }
+        if constructor['genaue']:
+            sizes = [x.strip() for x in constructor['genaue'].split(',')]
+            grosseParam = ",isz:ex,iszw:"+sizes[0]+",iszh:"+sizes[1]
+        else: grosseParam = ''
+
         
         c = 0
         for i in params:
@@ -460,9 +469,9 @@ class googleimagesdownload:
         else: zeitbereich = ''
 
         if constructor['webseite']:
-            url = root+constructor['search']+",site:"+record['webseite']+base+bauen+closer+zeitbereich
+            url = root+constructor['search']+",site:"+constructor['webseite']+base+bauen+grosseParam+closer+zeitbereich
         else:
-            url = root+constructor['search']+base+bauen+closer+zeitbereich
+            url = root+constructor['search']+base+bauen+grosseParam+closer+zeitbereich
         if mode == 'normalize':
             url = root+constructor['search']+base+closer
         return url
@@ -555,7 +564,8 @@ class googleimagesdownload:
         write = record['write']
         lautlos = record['lautlos']
         metadata = record['metadata']
-    
+        genaue = record['genaue']
+        abpaths = {}
 
         t0 = time.time()
         total_errors = 0
@@ -586,6 +596,7 @@ class googleimagesdownload:
                     bauen = record
                     bauen['timerange'] = timerange
                     bauen['search'] = quote(word)
+                    bauen['genaue'] = genaue
                     url = self._url_bauen(bauen)
                 if limit <= 100:
                     page = self.download_page(url, timeout=timeout)
@@ -602,7 +613,8 @@ class googleimagesdownload:
                             print(header, search_keyword.pop(0))
                     i += 1
                     constructor = {'limit':limit, 'pause':pause, 'format':format, 'write':write, 'lautlos':lautlos, 'metadata':metadata, 'timeout':timeout, 'printURL':printURL}
-                    items, error_count = self._get_all_items(page, directory, i, constructor)
+                    items, abpath, error_count = self._get_all_items(page, directory, i, constructor)
+                    if record['abpath']: abpaths[word] = abpath
                     if record['auszug']:
                         if (len(items) > 0):
                             zeit = time.strftime("%d-%B-%Y", time.gmtime())
@@ -622,10 +634,10 @@ class googleimagesdownload:
                 total_errors += error_count
         t1 = time.time() 
         total_time = t1 - t0
-        return total_time, total_errors
+        return total_time, total_errors, abpaths
     
     def make_arguments(self, dictionary):
-        args_list = ["keywords","extract","suffix","prefix","limit","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos", "write"]
+        args_list = ["keywords","extract","suffix","prefix","limit","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos", "write", "genaue", "abpath"]
         if __name__ != '__main__':
             record = {}
             for i in args_list:
@@ -668,12 +680,14 @@ def user_input():
     config.add_argument('-pre', '--prefix', help="Geben Sie ein Prafix an, dass an der Beginnen von jedem Suchen hinzugefugt werden!, kannst du es auch zufallig auswahlen!", type=str)
     config.add_argument('-la', '--language', help="Auswahlen in welche Sprache mochtest Du die Suchergebnisse erhalten!", choices=['Arabic','Chinese (Simplified)','Chinese (Traditional)','Czech','Danish','Dutch','English','Estonian','Finnish','French','German','Greek','Hebrew','Hungarian','Icelandic','Italian','Japanese','Korean','Latvian','Lithuanian','Norwegian','Portuguese','Polish','Romanian','Russian','Spanish','Swedish','Turkish'], type=str)
     config.add_argument('-zb', '--timerange', help="Geben Sie die Zeitbereich an, inzwischen unseres Bilder hochgeladen wurden, format {'time_min':'MM/DD/YYYY','time_min':'MM/DD/YYYY'}'")
+    config.add_argument('-ge', '--genaue', help="Geben Sie die Genaue Grosse, dass du die Bildern erhalten mochtest", type=str, required=False)
+    config.add_argument('-ap', '--abpath', help="Auswahlen Sie, ob dass die Linken des Bildern erhalten mochtest", required=False, action="store_true")
     config_file_check = config.parse_known_args()
     object_check = vars(config_file_check[0])
     records = []
     #Argumente von Configdatei ausshalten
     if object_check['config_file'] != '':
-        args_list = ["keywords","extract","suffix","prefix","limit","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos", "write"]
+        args_list = ["keywords","extract","suffix","prefix","limit","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos", "write","genaue", "abpath"]
         json_file = json.load(open(config_file_check[0].config_file))
         for record in range(0,len(json_file['Records'])):
             arguments = {}

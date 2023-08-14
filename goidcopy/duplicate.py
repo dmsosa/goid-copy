@@ -1,11 +1,10 @@
-##Dieses Programm die gleiche Funktion als den my.py macht, aber mit Selenium
 from goidcopy import googleimagesdownload
 
+look = {'keywords':'mayo','grosse':'large','abpath':'True', 'limit':2}
 downloader = googleimagesdownload()
-dicto = {'keywords':'Marcos', 'suffix':'Querido','limit':4}
-record, vars = downloader.make_arguments(dicto)
-totalT, totalE = downloader.download(record, vars)
-print(totalT, totalE)
+rec, args = downloader.make_arguments(look)
+totalt, totale, abpath = downloader.download(rec, args)
+print(totalt, totale, abpath)
 
 # from selenium import webdriver
 # from selenium.webdriver.common.by import By
