@@ -1,9 +1,10 @@
 from goidcopy import googleimagesdownload
 
 c = googleimagesdownload()
-record = c.make_record({"keywords":"Mini golf", "limit":12, "webseite":"instagram.com"})
+record = c.make_record({"keywords":"Rooster", 'lautlos':True, 'limit':12, "offset":6})
 args = c._validate_parameters(record)
 totalt, totale, abpaths = c.download(record, args)
+print(abpaths)
 # from selenium import webdriver
 # from selenium.webdriver.common.by import By
 # from selenium.webdriver.chrome.options import Options

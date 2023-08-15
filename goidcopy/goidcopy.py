@@ -83,7 +83,10 @@ class googleimagesdownload:
             limit = int(record['limit'])
         else:
             limit = 100
-
+        if record['offset']:
+            offset = int(record['offset'])
+        else:
+            offset = 0
         if record['output']:
             main_dir = record['output']
         else:
@@ -126,7 +129,7 @@ class googleimagesdownload:
         else: timerange = None
         if record['genaue'] and record['grosse']:
             parser.error("Du kannst nicht gleichzeitig die Genaue Grosse und Grosse benutz!")
-        validated_vars = {'search_keyword': search_keyword, 'suffix':suffix_keywords, 'prefix':prefix, 'limit':limit, 'main_dir':main_dir, 'pause':pause, 'printURL':printURL, 'timeout':timeout, 'timerange':timerange, 'webseite':webseite}
+        validated_vars = {'search_keyword': search_keyword, 'suffix':suffix_keywords, 'prefix':prefix, 'limit':limit, 'offset':offset, 'main_dir':main_dir, 'pause':pause, 'printURL':printURL, 'timeout':timeout, 'timerange':timerange, 'webseite':webseite}
         return validated_vars
 
     def download_over_limit(self, url):
@@ -345,6 +348,7 @@ class googleimagesdownload:
         error_count = 0
         searchName = directory.split('/')[-1]
         limit = constructor['limit']
+        offset = constructor['offset']
         pause = constructor['pause']
         format = constructor['format']
         write = constructor['write']
@@ -366,25 +370,26 @@ class googleimagesdownload:
                 break
             else:
                 page = page[end_content:]
-                item_object, download_status, download_message = self.download_image(item_object, directory, count+1, timeout, printURL, format)
-                if download_status == 'Erfolg':
-                    items.append(item_object)
-                    if not lautlos:
-                        print(download_message)
-                    if metadata:
-                        print("Bilder Metadatei:\n"+str(item_object))
-                    if write:
-                        self._write_txt(str(item_object))
+                if count >= offset:
+                    item_object, download_status, download_message = self.download_image(item_object, directory, count+1, timeout, printURL, format)
+                    if download_status == 'Erfolg':
+                        items.append(item_object)
                         if not lautlos:
-                            print("Textdatei schreibt!")
-                    retrieved.append(item_object[1]['link'])
-                    abpath.append(item_object[1]['link'])
-                    count += 1
-                    success += 1
-                else:
-                    error_count += 1
-                    if not lautlos:
-                        print(download_message)
+                            print(download_message)
+                        if metadata:
+                            print("Bilder Metadatei:\n"+str(item_object))
+                        if write:
+                            self._write_txt(str(item_object))
+                            if not lautlos:
+                                print("Textdatei schreibt!")
+                        retrieved.append(item_object[1]['link'])
+                        abpath.append(item_object[1]['link'])
+                        success += 1
+                    else:
+                        error_count += 1
+                        if not lautlos:
+                            print(download_message)
+                count += 1
                 time.sleep(pause)
         if success < limit:
             if not lautlos:
@@ -557,6 +562,7 @@ class googleimagesdownload:
         printURL = vars['printURL']
         webseite = vars['webseite']
         limit = vars['limit']
+        offset = vars['offset']
         pause = vars['pause']
         timerange = vars['timerange']
         timeout = vars['timeout']
@@ -565,6 +571,7 @@ class googleimagesdownload:
         lautlos = record['lautlos']
         metadata = record['metadata']
         genaue = record['genaue']
+
         abpaths = {}
 
         t0 = time.time()
@@ -613,9 +620,9 @@ class googleimagesdownload:
                         if not record['lautlos']:
                             print(header, search_keyword.pop(0))
                     i += 1
-                    constructor = {'limit':limit, 'pause':pause, 'format':format, 'write':write, 'lautlos':lautlos, 'metadata':metadata, 'timeout':timeout, 'printURL':printURL}
+                    constructor = {'limit':limit, 'offset':offset, 'pause':pause, 'format':format, 'write':write, 'lautlos':lautlos, 'metadata':metadata, 'timeout':timeout, 'printURL':printURL}
                     items, abpath, error_count = self._get_all_items(page, directory, i, constructor)
-                    if record['abpath']: abpaths[word] = abpath
+                    abpaths[word] = abpath
                     if record['auszug']:
                         if (len(items) > 0):
                             zeit = time.strftime("%d-%B-%Y", time.gmtime())
@@ -638,7 +645,7 @@ class googleimagesdownload:
         return total_time, total_errors, abpaths
     
     def make_record(self, dictionary):
-        args_list = ["keywords","extract","suffix","prefix","limit","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos", "write", "genaue", "abpath"]
+        args_list = ["keywords","extract","suffix","prefix","limit","offset","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos", "write", "genaue", "abpath"]
         if __name__ != '__main__':
             record = {}
             for i in args_list:
@@ -681,7 +688,6 @@ def user_input():
     config.add_argument('-la', '--language', help="Auswahlen in welche Sprache mochtest Du die Suchergebnisse erhalten!", choices=['Arabic','Chinese (Simplified)','Chinese (Traditional)','Czech','Danish','Dutch','English','Estonian','Finnish','French','German','Greek','Hebrew','Hungarian','Icelandic','Italian','Japanese','Korean','Latvian','Lithuanian','Norwegian','Portuguese','Polish','Romanian','Russian','Spanish','Swedish','Turkish'], type=str)
     config.add_argument('-zb', '--timerange', help="Geben Sie die Zeitbereich an, inzwischen unseres Bilder hochgeladen wurden, format {'time_min':'MM/DD/YYYY','time_min':'MM/DD/YYYY'}'")
     config.add_argument('-ge', '--genaue', help="Geben Sie die Genaue Grosse, dass du die Bildern erhalten mochtest", type=str, required=False)
-    config.add_argument('-ap', '--abpath', help="Auswahlen Sie, ob dass die Linken des Bildern erhalten mochtest", required=False, action="store_true")
     config_file_check = config.parse_known_args()
     object_check = vars(config_file_check[0])
     records = []
