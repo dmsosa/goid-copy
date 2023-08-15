@@ -336,8 +336,7 @@ class googleimagesdownload:
         site = rawPage[site_start+len(queries['site'][0]):site_end]
         #Objekt erstellen
         img_object = (title[:16], {'link':img_link, 'width':width, 'height':height, 'title':title, 'site':site})
-        retrieved_links.append(img_object[1]['link'])
-        return img_object, end_content, retrieved_links
+        return img_object, end_content
     def _get_all_items(self, page, directory, index, constructor):
         items = []
         retrieved = []
@@ -361,7 +360,7 @@ class googleimagesdownload:
             error_count += 1
             return items, error_count
         while count < limit:
-            item_object, end_content, retrieved = self._get_next_item(page, retrieved, limit)
+            item_object, end_content  = self._get_next_item(page, retrieved, limit)
             if item_object == 'no_links':
                 print('no more links')
                 break
@@ -378,6 +377,7 @@ class googleimagesdownload:
                         self._write_txt(str(item_object))
                         if not lautlos:
                             print("Textdatei schreibt!")
+                    retrieved.append(item_object[1]['link'])
                     abpath.append(item_object[1]['link'])
                     count += 1
                     success += 1
@@ -502,7 +502,7 @@ class googleimagesdownload:
     def _set_name(self, dir, record):
         worked_name = dir
         desired_args = ['color','type','gross','rechte','time','format','colortype','aspekt','webseite']
-        values = [i for i in record.values() if i in desired_args and i is not None]
+        values = [v for k,v in record.items() if k in desired_args and v is not None]
         for value in values:
             #Ausschielssen der Domain aus dem Webseite-Namen
             if "." in value:
@@ -597,6 +597,7 @@ class googleimagesdownload:
                     bauen['timerange'] = timerange
                     bauen['search'] = quote(word)
                     bauen['genaue'] = genaue
+                    bauen['webseite'] = webseite
                     url = self._url_bauen(bauen)
                 if limit <= 100:
                     page = self.download_page(url, timeout=timeout)
@@ -636,7 +637,7 @@ class googleimagesdownload:
         total_time = t1 - t0
         return total_time, total_errors, abpaths
     
-    def make_arguments(self, dictionary):
+    def make_record(self, dictionary):
         args_list = ["keywords","extract","suffix","prefix","limit","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos", "write", "genaue", "abpath"]
         if __name__ != '__main__':
             record = {}
@@ -645,8 +646,7 @@ class googleimagesdownload:
                     record[i] = None
                 else:
                     record[i] = dictionary[i]
-            variables = self._validate_parameters(record)
-            return record, variables
+            return record
 # ======================= Alle Funktionen initialisierten =================================
 
 def user_input():
@@ -721,7 +721,7 @@ def main():
             downloader = googleimagesdownload()
             variables = downloader._validate_parameters(records[i])
             print('Dateisuch nummer: ', str(i+1))
-            total_time, total_errors = downloader.download(records[i], variables)
+            total_time, total_errors, abpaths = downloader.download(records[i], variables)
             if not records[i]['lautlos']:
                 print('Aufgewendet Gesamtzeit: ' + str(total_time) + "\Fehler: " + str(total_errors))
     

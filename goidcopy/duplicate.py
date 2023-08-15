@@ -1,11 +1,9 @@
 from goidcopy import googleimagesdownload
 
-look = {'keywords':'mayo','grosse':'large','abpath':'True', 'limit':2}
-downloader = googleimagesdownload()
-rec, args = downloader.make_arguments(look)
-totalt, totale, abpath = downloader.download(rec, args)
-print(totalt, totale, abpath)
-
+c = googleimagesdownload()
+record = c.make_record({"keywords":"Mini golf", "limit":12, "webseite":"instagram.com"})
+args = c._validate_parameters(record)
+totalt, totale, abpaths = c.download(record, args)
 # from selenium import webdriver
 # from selenium.webdriver.common.by import By
 # from selenium.webdriver.chrome.options import Options
