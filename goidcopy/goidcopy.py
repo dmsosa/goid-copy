@@ -688,12 +688,13 @@ def user_input():
     config.add_argument('-la', '--language', help="Auswahlen in welche Sprache mochtest Du die Suchergebnisse erhalten!", choices=['Arabic','Chinese (Simplified)','Chinese (Traditional)','Czech','Danish','Dutch','English','Estonian','Finnish','French','German','Greek','Hebrew','Hungarian','Icelandic','Italian','Japanese','Korean','Latvian','Lithuanian','Norwegian','Portuguese','Polish','Romanian','Russian','Spanish','Swedish','Turkish'], type=str)
     config.add_argument('-zb', '--timerange', help="Geben Sie die Zeitbereich an, inzwischen unseres Bilder hochgeladen wurden, format {'time_min':'MM/DD/YYYY','time_min':'MM/DD/YYYY'}'")
     config.add_argument('-ge', '--genaue', help="Geben Sie die Genaue Grosse, dass du die Bildern erhalten mochtest", type=str, required=False)
+    config.add_argument('-of', '--offset', help="Geben Sie die Nummer der Bildern an, nachdem wir herunterladen starten mussen!", type=int, required=False)
     config_file_check = config.parse_known_args()
     object_check = vars(config_file_check[0])
     records = []
     #Argumente von Configdatei ausshalten
     if object_check['config_file'] != '':
-        args_list = ["keywords","extract","suffix","prefix","limit","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos", "write","genaue", "abpath"]
+        args_list = ["keywords","extract","suffix","prefix","limit","offset","format","url","single","output","pause","color","colortype","rechte","grosse","type","time","timerange","aspekt","ahnlich","webseite","print","metadata","auszug","timeout","language", "lautlos", "write","genaue"]
         json_file = json.load(open(config_file_check[0].config_file))
         for record in range(0,len(json_file['Records'])):
             arguments = {}

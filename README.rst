@@ -135,6 +135,11 @@ Arguments
 |                  |             |                                             |
 |                  |             | `Moglichen Werten: Arabic, Chinese (Vereinfacht, und viel mehrere Sprachen)`                                                |
 +------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
+| genaue           | ge          | Geben Sie an, die genaue Grosses der Bildern dass du erhalten mochtest                                                      |
++------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
++------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
+| verschiebung     | of          | Geben Sie an, die genaue Grosses der Bildern dass du erhalten mochtest                                                      |
++------------------+-------------+-------------------------------------------------------------------------------------------------------------------------------+
 | config_file       | cf          | You can pass the arguments inside a config file. This is an alternative to passing arguments on the command line directly.    |
 |                   |             |                                                                                                                               |
 |                   |             | Please refer to the                                                                                                           |
